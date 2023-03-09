@@ -8,8 +8,8 @@ output_column: label
 
 # Maps attributes of a dataset example to a class (i.e. a [key] in `verbalizer`)
 column_map:
-  label: 
-    # Within the column `label`, map the value `entailment` to `entailment`, 
+  label:
+    # Within the column `label`, map the value `entailment` to `entailment`,
     # `neutral` to `not entailment`, and `contradiction` to `not entailment`
     entailment: entailment
     neutral: not entailment

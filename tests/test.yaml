@@ -8,8 +8,8 @@ output_column: label
 
 # (Optional) Maps attributes of a dataset example to a class (i.e. a [key] in `label_map`)
 column_map:
-  label: 
-    # Within the column `label`, map the value `entailment` to `entailment`, 
+  label:
+    # Within the column `label`, map the value `entailment` to `entailment`,
     # `neutral` to `not entailment`, and `contradiction` to `not entailment`
     entailment: entailment
     neutral: not entailment
@@ -23,7 +23,7 @@ prompts:
     verbalizer:
       - entailment: [ "yes", "true", ]
       - not entailment: [ "no", "false"]
-    # (Optional) Defines a Jinja template that takes in a variable called `output` (i.e. the 
+    # (Optional) Defines a Jinja template that takes in a variable called `output` (i.e. the
     # contents of the `output_column`) and transforms it into the format we expect the
     # model to generate. To apply no transformation, simply set it to `"{{output}}"`.
     # It will default to applying no transformation.
