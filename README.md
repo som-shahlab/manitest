@@ -32,10 +32,10 @@ python3 main.py \
 
 ## Todos
 
-[ ] Test case with medparasimp generation task
-[ ] Test case with mednli replacement classification task
-[ ] Abstract things to work on not Nero (e.g. load HF models from Hub, load local HF models, hit external APIs)
-[ ] Support text generation flags in `main.py`, pass to Manifest
-[ ] Clean up output to be more user friendly
-[ ] Convert .yaml prompt files to .py `Task` files
-[ ] Documentation
+- [ ] Test case with medparasimp generation task
+- [ ] Test case with mednli replacement classification task
+- [ ] Abstract things to work on not Nero (e.g. load HF models from Hub, load local HF models, hit external APIs)
+- [ ] Support text generation flags in `main.py`, pass to Manifest
+- [ ] Clean up output to be more user friendly
+- [ ] Convert .yaml prompt files to .py `Task` files
+- [ ] Documentation
