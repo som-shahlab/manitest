@@ -1,0 +1,11 @@
+dataset_name: medparasimp
+dataloader: ../bigbio_datasets/medparasimp/medparasimp.py
+dataloader_subset: medparasimp_bigbio_t2t
+is_classification: False
+
+# Identifies which column of your dataset is the "ground truth" label
+output_column: text_2
+
+prompts:
+  is_summarized_as:
+    template: "{{text_1}} is summarized as: "

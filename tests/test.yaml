@@ -1,0 +1,41 @@
+dataset_name: mednli
+dataloader: ../bigbio_datasets/mednli/mednli.py
+dataloader_subset: mednli_bigbio_te
+is_classification: True
+
+# Identifies which column of your dataset is the "ground truth" label
+output_column: label
+
+# (Optional) Maps attributes of a dataset example to a class (i.e. a [key] in `label_map`)
+column_map:
+  label: 
+    # Within the column `label`, map the value `entailment` to `entailment`, 
+    # `neutral` to `not entailment`, and `contradiction` to `not entailment`
+    entailment: entailment
+    neutral: not entailment
+    contradiction: not entailment
+
+prompts:
+  licensed_to_say:
+    # Jinja prompt template into which the dataset example will get injected
+    template: "{{premise}} Therefore, we are licensed to say that {{hypothesis}} yes or no"
+    # "Verbalizer" -- [key] = class, [value] = tokens which, if the model outputs them, we consider correct for that class
+    verbalizer:
+      - entailment: [ "yes", "true", ]
+      - not entailment: [ "no", "false"]
+    # (Optional) Defines a Jinja template that takes in a variable called `output` (i.e. the 
+    # contents of the `output_column`) and transforms it into the format we expect the
+    # model to generate. To apply no transformation, simply set it to `"{{output}}"`.
+    # It will default to applying no transformation.
+    output_template: "Here is my output: {{output}}"
+  suppose:
+    template: "Suppose {premise} Can we infer that {hypothesis}?"
+    verbalizer:
+      - entailment: [ ]
+      - not entailment: [ ]
+  support_claim:
+    template: "{{premise}} Does the previous passage support the claim that {{hypothesis}}?"
+    verbalizer:
+      # Test YAML 1.2
+      - yes: [  "true", ]
+      - no: [ no, "false"]
