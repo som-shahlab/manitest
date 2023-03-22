@@ -8,23 +8,18 @@ python3 -m manifest.api.app \
     --model_name_or_path gpt2 \
     --model_generation_type text-generation
 
-python3 main.py \
-    --manifest_url http://127.0.0.1:5000 \
-    --path_to_task tests/mednli/mednli.py \
-    --data_dir ~/downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0.zip \
-    --output_dir ./ignore/mednli/
+python3 main.py --manifest_url http://127.0.0.1:5000 --path_to_task tests/mednli/mednli.py --output_dir ./ignore --data_dir ~/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ --dataset_splits test,train
 """
 import os
 import argparse
-import json
 import requests
-import numpy as np
-from manifest import Manifest
 from loguru import logger
+from manifest import Manifest
 from datasets import DatasetDict
-# Custom scripts
+
 from base import load_task
 from eval import run_eval
+
 
 def main(args):
     # Load dataset + prompts for specific task
@@ -49,38 +44,28 @@ def main(args):
         print(str(e))
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
-    # Determine which dataset splits to evaluation on
+    # Determine which dataset splits to evaluate
     try:
         splits = args.dataset_splits.split(",")
     except Exception as e:
         print(str(e))
-        raise ValueError(f"Error parsing `--dataset_splits`. It should be a comma-separated list, but got: {args.dataset_splits}")
-    dataset: DatasetDict = DatasetDict({ split: dataset[split] for split in splits })
+        raise ValueError(
+            f"Error parsing `--dataset_splits`. It should be a comma-separated list, but got: {args.dataset_splits}"
+        )
+    dataset: DatasetDict = DatasetDict({split: dataset[split] for split in splits})
     logger.info(f"Evaluating on dataset splits: {splits}")
 
-    # Run experiments
-    result, metric = run_eval(
+    # Run evaluations
+    run_eval(
         manifest,
-        task,
         dataset,
+        task,
+        args.output_dir,
         batch_size=args.batch_size,
-        path_to_output_dir=args.path_to_output_dir,
         max_new_tokens=args.max_new_tokens,
     )
 
-    # Save metrics
-    path_to_metrics_file: str = os.path.join(args.path_to_output_dir, "metrics.json")
-    with open(path_to_metrics_file, "w") as f:
-        json.dump(metrics, f, indent=4)
-
-    # Print metrics
-    if is_multilabel:
-        log_multilabel_metrics(metrics)
-    elif is_classification:
-        log_classification_metrics(metrics)
-    else:
-        log_generation_metrics(metrics)
-    print("done!")
+    logger.info("DONE!")
 
 
 if __name__ == "__main__":
@@ -104,7 +89,7 @@ if __name__ == "__main__":
         help="Path to DIRECTORY to output logs / results / metrics",
         required=True,
     )
-    
+
     # Dataset loading/splits
     parser.add_argument(
         "--dataloader",
@@ -178,8 +163,10 @@ if __name__ == "__main__":
         default=0.9,
     )
     args = parser.parse_args()
-    
+
     if not (args.manifest_url.startswith("http://") or args.manifest_url.startswith("https://")):
-        raise ValueError("Please include 'http://' or 'https://' in your manifest_url. If you're running on 'localhost:5000', try 'http://localhost:5000'")
+        raise ValueError(
+            "Please include 'http://' or 'https://' in your manifest_url. If you're running on 'localhost:5000', try 'http://localhost:5000'"
+        )
 
     main(args)

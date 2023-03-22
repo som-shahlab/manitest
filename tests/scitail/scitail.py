@@ -7,17 +7,22 @@ from base import Prompt, TaskType, Task
 ####################################
 
 
-class MedNLIPrompt(Prompt):
+class ScitailPrompt(Prompt):
     verbalizer: dict = {
         "entailment": ["yes"],
         "not entailment": ["no "],
     }
 
     def generate_llm_queries(self, example: dict) -> Dict[str, List[str]]:
+        """Generate queries to feed into the LLM for evaluating the given dataset example.
+            Returns a dict where...
+                [key] = Label for a specific class
+                [value] = List of queries for that label.
+            """
         return super().generate_llm_queries_using_verbalizer(example, self.verbalizer)
 
     def get_label(self, example: dict):
-        """Maps attributes of a dataset example to a class (i.e. a [key] in `verbalizer`)"""
+        """Gets the ground truth label for a dataset example"""
         if example["label"] in ["entailment"]:
             return "entailment"
         elif example["label"] in ["neutral", "contradiction"]:
@@ -26,7 +31,7 @@ class MedNLIPrompt(Prompt):
             raise ValueError(f"Unknown label {example['label']}")
 
 
-class Prompt1(MedNLIPrompt):
+class Prompt1(ScitailPrompt):
     name: str = "suppose"
     verbalizer: dict = {
         "entailment": ["entailment"],
@@ -37,21 +42,21 @@ class Prompt1(MedNLIPrompt):
         return f"Suppose {example['premise']} Can we infer that {example['hypothesis']}?"
 
 
-class Prompt2(MedNLIPrompt):
+class Prompt2(ScitailPrompt):
     name: str = "two_sentences"
 
     def generate_prompt(self, example: dict) -> str:
         return f"Sentence 1: {example['premise']}\n\nSentence 2: {example['hypothesis']}\n\nQuestion: Does Sentence 1 entail Sentence 2?  yes or no"
 
 
-class Prompt3(MedNLIPrompt):
+class Prompt3(ScitailPrompt):
     name: str = "does_it_follow"
 
     def generate_prompt(self, example: dict) -> str:
         return f"Given that {example['premise']} Does it follow that {example['hypothesis']}  yes or no"
 
 
-class Prompt4(MedNLIPrompt):
+class Prompt4(ScitailPrompt):
     name: str = "licensed_to_say"
     verbalizer: dict = {
         "entailment": ["true"],
@@ -62,7 +67,7 @@ class Prompt4(MedNLIPrompt):
         return f"{example['premise']} Therefore, we are licensed to say that {example['hypothesis']}  true or false"
 
 
-class Prompt5(MedNLIPrompt):
+class Prompt5(ScitailPrompt):
     name: str = "does_passage_support_claim"
 
     def generate_prompt(self, example: dict) -> str:
@@ -74,8 +79,8 @@ class Prompt5(MedNLIPrompt):
 ####################################
 
 
-class MedNLI(Task):
-    name: str = "mednli"
+class Scitail(Task):
+    name: str = "scitail"
     task_type: TaskType = TaskType.BINARY_CLASSIFICATION
 
     def __init__(self):
@@ -89,9 +94,9 @@ class MedNLI(Task):
 
     def load_dataset(self, dataloader: Optional[str] = None, data_dir: Optional[str] = None):
         return load_dataset(
-            "bigbio/mednli" if dataloader is None else dataloader, data_dir=data_dir, name="mednli_bigbio_te"
+            "bigbio/scitail" if dataloader is None else dataloader, data_dir=data_dir, name="scitail_bigbio_te"
         )
 
 
 # Important -- needed so that the task can be imported by the eval harness!
-Export = MedNLI
+Export = Scitail

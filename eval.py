@@ -1,200 +1,238 @@
 """
 Helper functions for classification tasks
 """
+import os
+import json
+from typing import List, Dict, Tuple, Union, Any
 from tqdm import tqdm
-from typing import List, Dict, Tuple
-from sklearn.metrics import classification_report
 import numpy as np
+import pandas as pd
+from sklearn.metrics import classification_report, confusion_matrix
+from datasets import DatasetDict
+from loguru import logger
 from utils import (
-    generate_prompts_with_injected_examples,
     logsumexp,
+    manifest_model_config,
+    manifest_tokenizer_config,
     manifest_score_sequences,
     manifest_generate_text,
     generation_multilabel_metric,
 )
-from utils import (
-    log_model_tokenizer_config,
-    log_task_config,
-    log_classification_results,
-    log_generations,
-    log_generation_results,
-)
 from metrics import generation_metric
-from base import Task
-import pandas as pd
-from base import TaskType, Prompt
-from datasets import DatasetDict
+from base import Task, TaskType, Prompt
 
-def run_eval(manifest, task: Task, dataset: DatasetDict, batch_size: int = 10, path_to_output_dir: str = "./output/", *args, **kwargs):
-    prompts: List[Prompt] = task.prompts
+####################################
+# Master evaluation runner
+####################################
 
-    # Load dataset into prompt format
-    inputs_by_split: Dict[str, List[Tuple[str, str]]] = generate_prompts_with_injected_examples(
-        dataset, prompt_template, output_column, output_template
-    )
+def run_eval(
+    manifest,
+    dataset: DatasetDict,
+    task: Task,
+    output_dir: str,
+    batch_size: int = 10,
+    *args,
+    **kwargs,
+) -> Dict[str, Dict[str, Union[pd.DataFrame, Dict]]]:
+    """Run all examples across all splits in the given `dataset` through the prompts of the given `task`
+        Also responsible for logging + saving results.
+    """
 
-    # Logging
-    log_task_config(path_to_output_dir, task, dataset)
-    log_model_tokenizer_config(path_to_output_dir, manifest)
+    # Setup logging
+    path_to_log_file: str = os.path.join(output_dir, "info.log")
+    if os.path.exists(path_to_log_file): os.remove(path_to_log_file)
+    log_sink = logger.add(path_to_log_file, level="INFO")
+    
+    # Log model + tokenizer + task configs
+    model_config: Dict = manifest_model_config(manifest)
+    tokenizer_config: Dict = manifest_tokenizer_config(manifest)
+    logger.info(f"Model config:\n{model_config}")
+    logger.info(f"Tokenizer config:\n{tokenizer_config}")
+    logger.info(f"Task config:\nName: {task.name}\nType: {task.task_type}")
+    logger.info("Prompts:\n" + '\n'.join([ f"{idx + 1}. " + str(p) for idx, p in enumerate(task.prompts) ]))
 
     # Run classification/generation task
     if task.task_type in [TaskType.BINARY_CLASSIFICATION, TaskType.MULTICLASS_CLASSIFICATION]:
-        func = run_classification
+        eval_func = run_classification
+        metric_func = metric_classification
+        metric_agg_func = metric_agg_classification
     elif task.task_type == TaskType.MULTILABEL_CLASSIFICATION:
-        func = run_multilabel_classification
+        eval_func = run_multilabel_classification
+        metric_func = metric_classification
+        metric_agg_func = metric_agg_classification
     elif task.task_type == TaskType.GENERATION:
-        func = run_generation
+        eval_func = run_generation
+        metric_func = metric_generation
+        metric_agg_func = metric_agg_generation
     else:
         raise ValueError(f"Task type '{task.task_type}' not supported")
 
-    results, metrics = func(
-        manifest,
-        task,
-        inputs_by_split,
-        batch_size=batch_size,
-        path_to_output_dir=path_to_output_dir,
-        *args,
-        **kwargs,
-    )
-    # Logging
-    for split in results.keys():
-        prompts = results[split][:, 0]
-        generations = results[split][:, 1]
-        log_generations(path_to_output_dir, task, split, prompts, generations)
+    prompts: List[Prompt] = task.prompts
+    prompt_to_metrics: Dict[str, Dict[str, Dict]] = {}
+    for prompt in prompts:
+        # Run prompt through Manifest
+        results = eval_func(
+            manifest,
+            dataset,
+            prompt,
+            output_dir,
+            batch_size=batch_size,
+            *args,
+            **kwargs,
+        )
 
-    return results, metrics
+        # Calculate metrics
+        # [key] = split, [value] = Dict of metrics
+        metrics: Dict[str, Dict] = metric_func(results)
+        prompt_to_metrics[prompt.name] = metrics
+        
+        # Save results / metrics
+        for split in dataset.keys():
+            results[split].to_csv(os.path.join(output_dir, f'results_{split}_{prompt.name}.csv'), index=False)
+            json.dump(metrics[split], open(os.path.join(output_dir, f"metrics_{split}_{prompt.name}.json"), "w"), indent=4)
+        logger.info(f"Prompt '{prompt.name}' metrics:\n{metrics}")
+
+    # Calculate overall metrics across all prompts
+    metrics_agg: Dict[str, Any] = metric_agg_func(prompt_to_metrics)
+    
+    # Save metrics
+    for split in dataset.keys():
+        json.dump(metrics_agg[split], open(os.path.join(output_dir, f"metrics_{split}.json"), "w"), indent=4)
+    logger.info(f"Aggregated metrics across ALL prompts:\n{metrics}")
+
+####################################
+# Specific runners for each task type
+####################################
 
 def run_classification(
     manifest,
-    task,
-    inputs_by_split: Dict[str, List[Tuple[str, str]]] = {},
+    dataset: DatasetDict,
+    prompt: Prompt,
+    output_dir: str,
     batch_size: int = 10,
-    path_to_output_dir: str = "",
     **kwargs,
-) -> Tuple:
-    # Run prompts through model
-    classes: List[str] = list(task.verbalizer.keys())
-    results: Dict[str, np.ndarray] = {}  # [key] = split, [value] = np.ndarray of shape (num_examples, num_classes)
-    for split in inputs_by_split.keys():
-        dfs_raw: List[pd.DataFrame] = []
-        dfs_pred: List[pd.DataFrame] = []
+) -> Dict[str, pd.DataFrame]:
+    """Run a binary/multi-class classification task by first 
+        converting each example into a set of prompts 
+        (one for each term for each class label, as specified by the prompt's verbalizer), 
+        then running each prompt through Manifest, 
+        and finally comparing the model output to the ground truth label.
+    """
+    results: Dict[str, pd.DataFrame] = {}  # [key] = split, [value] = pd.DataFrame containing results
+    
+    # Adjust batch size to account for multiple terms per class for each prompt
+    n_terms: int = len([x for x in prompt.verbalizer.values()])
+    actual_batch_size: int = batch_size // n_terms
+    
+    logger.info(f"Requested batch size: {batch_size} examples | Actual batch size: {actual_batch_size} examples | # prompts per example: {n_terms}")
+    
+    for split in dataset.keys():
+        # Feed prompts through model, one 'term' at a time, where the terms are taken from the verbalizer for this prompt. 
+        # For each example, we generate a unique prompt, pair it with a term, then feed the pair into the model.
+        dfs: List[pd.DataFrame] = []
         # Store (y, y_hat, prompt, model generation) for every example (where y is the idx in `classes` for that label)
-        labels_preds_prompts_outputs: List[Tuple[str, str, int, int]] = []
-        terms_len: int = len([x for x in task.verbalizer.values()])
-        batch_len: int = (
-            batch_size // terms_len
-        )  # adjust batch size to account for multiple terms per class for each prompt
-        for i in tqdm(range(0, len(inputs_by_split[split]), batch_len)):
-            batch: List[Tuple] = inputs_by_split[split][i : i + batch_len]
-            # Create unique prompt for each class
+        for batch_idx in tqdm(range(0, len(dataset[split]), actual_batch_size), desc=f"Prompt: '{prompt.name}' | Split: '{split}'"):
+            # Convert batch (which is a dict of lists) into a list of dicts (one dict per example)
+            batch_as_dict: Dict[list] = dataset[split][batch_idx : batch_idx + actual_batch_size]
+            batch: List[Tuple] = [dict(zip(batch_as_dict,t)) for t in zip(*batch_as_dict.values())]
+
+            # For each example in the batch...
             sequences: List[Dict] = []
-            for prompt_idx, (prompt, y) in enumerate(batch):
-                for label, terms in task.verbalizer.items():
+            for example_idx, example in enumerate(batch):
+                prompt_text: str = prompt.generate_prompt(example)
+                true_label: str = prompt.get_label(example)
+                example_id: int = batch_idx * actual_batch_size + example_idx
+                # For each class label `pred_label`...
+                for pred_label, terms in prompt.verbalizer.items():
+                    # For each token(s) `term` corresponding to this class label `pred_label`
                     for term in terms:
                         sequences.append(
                             {
-                                "prompt_idx": prompt_idx,
-                                "prompt": prompt,
-                                "y": y,
-                                "term": term,
-                                "y_hat": label,
-                                "logprob": None,
+                                "example_id": example_id, # unique ID for each example
+                                "prompt": prompt_text,
+                                "term": term, # will get appended to end of `prompt_text`
+                                "true_label": true_label,
+                                "pred_label": pred_label,
+                                "logprob": None, # will get filled in later by `manifest_score_sequences()`
                             }
                         )
             df = pd.DataFrame(sequences)
             prompts_with_labels: List[Tuple[str, str]] = list(zip(df["prompt"].tolist(), df["term"].tolist()))
             df["logprob"] = manifest_score_sequences(manifest, prompts_with_labels)
+
             # Verbalize: Aggregate probabilities across all model outputs corresponding to each class
-            df = (
-                df.groupby(["prompt_idx", "y_hat"])
-                .agg(
-                    {
-                        "logprob": logsumexp,
-                        "prompt": "first",
-                        "y": "first",
-                    }
-                )
-                .reset_index()
-            )
+            df = df.groupby(["example_id", "pred_label"]).agg({
+                    "logprob": logsumexp,
+                    "prompt": "first",
+                    "true_label": "first",
+                }).reset_index()
             # Create generation of each sequence for interpretability
-            generations: List[str] = [
-                x[0] for x in manifest_generate_text(manifest, df["prompt"].tolist(), max_new_tokens=32)
+            df["generation"] = [
+                x[0] for x in manifest_generate_text(manifest, df["prompt"].tolist(), max_new_tokens=16, max_tokens=16)
             ]
-            df["generation"] = generations
-            # Set prediction as most likely token
-            df_preds = (
-                df.sort_values("logprob", ascending=False).drop_duplicates(["prompt_idx"]).sort_values("prompt_idx")
-            )
-            for idx, row in df_preds.iterrows():
-                labels_preds_prompts_outputs.append((row["prompt"], row["generation"], row["y"], row["y_hat"]))
             # Save dataframes for logging
-            dfs_raw.append(df)
-            dfs_pred.append(df_preds)
-        # Log dataframes
-        pd.concat(dfs_raw, axis=0).to_csv(f"{path_to_output_dir}/df_raw_{task.id}.csv", index=False)
-        pd.concat(dfs_pred, axis=0).to_csv(f"{path_to_output_dir}/df_pred_{task.id}.csv", index=False)
-        results[split] = np.array(labels_preds_prompts_outputs)
-    # Calculate metrics
-    metrics: Dict = {}
-    for split in results.keys():
-        y = results[split][:, 2]
-        y_hat = results[split][:, 3]
-        metrics[split] = classification_report(y, y_hat, target_names=classes, output_dict=True)
+            dfs.append(df)
 
-    # Logging
-    log_classification_results(path_to_output_dir, task, results)
+        # Set prediction as most likely generated label, save this as our result
+        df_raw: pd.DataFrame = pd.concat(dfs, axis=0)
+        df_pred = df_raw.sort_values("logprob", ascending=False).drop_duplicates(["example_id"]).sort_values("example_id")
+        results[split] = df_pred[['example_id', 'true_label', 'pred_label', 'logprob', 'prompt', 'generation']]
 
-    return results, metrics
+        # Log raw model outputs
+        df_raw.to_csv(os.path.join(output_dir, f'raw_{split}_{prompt.name}.csv'), index=False)
+
+    return results
+
 
 def run_generation(
     manifest,
-    task,
-    inputs_by_split: Dict[str, List[Tuple[str, str]]] = {},
+    dataset: DatasetDict,
+    prompt: Prompt,
+    output_dir: str,
     batch_size: int = 10,
-    path_to_output_dir: str = "",
     max_new_tokens: int = 100,
     **kwargs,
 ):
+    """Run a text generation task by first converting each example 
+        into a prompt, then running each prompt through Manifest, 
+        and finally comparing the model output to the ground truth label.
+    """
+    results: Dict[str, pd.DataFrame] = {}  # [key] = split, [value] = pd.DataFrame containing results
+    
     # Run prompts through model
-    results: Dict[str, np.ndarray] = {}  # [key] = split, [value] = np.ndarray of shape (num_examples, num_classes)
-    for split in inputs_by_split.keys():
+    for split in dataset.keys():
+        # Feed prompts through model, one per example
+        rows: List[Tuple] = []
         # Store (y, y_hat, prompt, model generation) for every example (where y is the idx in `classes` for that label)
         labels_prompts_outputs: List[Tuple[str, str, str]] = []
-        for i in tqdm(range(0, len(inputs_by_split[split]), batch_size)):
-            batch: List[Tuple] = inputs_by_split[split][i : i + batch_size]
-            prompts: List[str] = [x[0] for x in batch]
-            ys: List[str] = [x[1] for x in batch]
+        for batch_idx in tqdm(range(0, len(dataset[split]), batch_size), desc=f"Prompt: '{prompt.name}' | Split: '{split}'"):
+            # Convert batch (which is a dict of lists) into a list of dicts (one dict per example)
+            batch_as_dict: Dict[list] = dataset[split][batch_idx : batch_idx + batch_size]
+            batch: List[Tuple] = [dict(zip(batch_as_dict,t)) for t in zip(*batch_as_dict.values())]
+            
+            # Get prompts + true labels for each example in this batch
+            prompts: List[str] = [ prompt.generate_prompt(example) for example in batch]
+            true_labels: List[str] = [ prompt.generate_label(example) for example in batch]
             generations: List[str] = [
                 x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
             ]
-            for (prompt, generation, y) in zip(prompts, generations, ys):
-                labels_prompts_outputs.append((prompt, generation, y))
-        results[split] = np.array(labels_prompts_outputs)
+            example_ids: List[int] = [batch_idx * batch_size + i for i in range(len(batch))]
+            rows.extend(list(zip(example_ids, prompts, generations, true_labels)))
+        results[split] = pd.DataFrame(rows, columns=["example_id", "prompt", "generation", "true_label"])
 
-    # Calculate metrics
-    metrics: Dict = {}
-    for split in results.keys():
-        generations = results[split][:, 1]
-        truth = results[split][:, 2]
-        bleu = generation_metric(generations, truth, "sentence_bleu")
-        metrics[split] = {
-            "bleu": bleu,
-        }
+    return results
 
-    # Logging
-    log_generation_results(path_to_output_dir, task, results)
-
-    return results, metrics
 
 def run_multilabel_classification(
     manifest,
-    task,
-    inputs_by_split: Dict[str, List[Tuple[str, str]]] = {},
+    dataset: DatasetDict,
+    prompt: Prompt,
+    output_dir: str,
     batch_size: int = 10,
-    path_to_output_dir: str = "",
     max_new_tokens: int = 100,
     **kwargs,
 ):
+    # TODO - update
     # Run prompts through model
     results: Dict[str, np.ndarray] = {}  # [key] = split, [value] = np.ndarray of shape (num_examples, num_classes)
     for split in inputs_by_split.keys():
@@ -221,7 +259,70 @@ def run_multilabel_classification(
             "multilabel_score": score,
         }
 
-    # Logging
-    log_generation_results(path_to_output_dir, task, results)
-
     return results, metrics
+
+
+####################################
+# Calculate metrics
+####################################
+
+def metric_classification(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
+    """Compute classification metrics for a specific prompt for all splits in `results`"""
+    metrics: Dict[str, Dict] = {}
+    for split, df in results.items():
+        metrics[split] = classification_report(df["true_label"], df["pred_label"], output_dict=True)
+        metrics[split]['confusion_matrix'] = confusion_matrix(df["true_label"], df["pred_label"]).tolist()
+    return metrics
+
+def metric_generation(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
+    """Compute generation metrics for a specific prompt for all splits in `results`"""
+    metrics: Dict[str, Dict] = {}
+    for split, df in results.items():
+        generations: List[str] = df['generation'].tolist()
+        true_labels: List[str]  = df['true_label'].tolist()
+        metrics[split] = {
+            "bleu": generation_metric(generations, true_labels, "sentence_bleu"),
+            "rouge": generation_metric(generations, true_labels, "rouge"),
+        }
+    return metrics
+
+def metric_agg_classification(metrics: Dict[str, Dict]) -> Dict[str, Any]:
+    """Aggregate classification metrics across multiple prompts for all splits in `results`.
+    
+    Input format:
+        metrics = {
+            'prompt.name' : {
+                'train' : { metrics... },
+                'test' : { metrics... },
+                'val' : { metrics... },
+                ...
+            },
+            ...
+        }
+    """
+    splits: List[str] = metrics[list(metrics.keys())[0]].keys()
+    return { 
+        split: {
+            'average' : round(np.mean([r[split]["accuracy"] for r in metrics.values()]), 3),
+            'std' : round(np.std([r[split]["accuracy"] for r in metrics.values()]), 3),
+            'min' : round(min([r[split]["accuracy"] for r in metrics.values()]), 3),
+            'max' : round(max([r[split]["accuracy"] for r in metrics.values()]), 3),
+            'all' : [r[split]["accuracy"] for r in metrics.values()]
+        } 
+        for split in splits 
+    }
+
+def metric_agg_generation(metrics: Dict[str, Dict]) -> Dict[str, Any]:
+    """Aggregate generation metrics across multiple prompts for all splits in `results`.
+    """
+    splits: List[str] = metrics[list(metrics.keys())[0]].keys()
+    return { 
+        split: {
+            'average' : round(np.mean([r[split]["bleu"] for r in metrics.values()]), 3),
+            'std' : round(np.std([r[split]["bleu"] for r in metrics.values()]), 3),
+            'min' : round(min([r[split]["bleu"] for r in metrics.values()]), 3),
+            'max' : round(max([r[split]["bleu"] for r in metrics.values()]), 3),
+            'all' : [r[split]["bleu"] for r in metrics.values()]
+        } 
+        for split in splits 
+    }
