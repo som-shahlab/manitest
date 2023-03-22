@@ -32,9 +32,12 @@ def manifest_tokenizer_config(manifest: Manifest) -> str:
 def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple[str, str]]) -> List[float]:
     try:
         results: Dict = requests.post(
-            manifest.client.host + "/score_sequence_eleuther_lm_eval", json={"prompts_with_labels": prompts_with_labels}
+            manifest.client.host + "/score_sequence_eleuther_lm_eval", 
+            json={
+                "prompts_with_labels": prompts_with_labels
+            }
         ).json()
-        scores = [(x["label_prob"]) for x in results]
+        scores = [ (x["label_prob"]) for x in results ]
     except Exception as e:
         print(str(e))
         raise RuntimeError(
@@ -46,9 +49,13 @@ def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple
 def manifest_generate_text(manifest: Manifest, sequences: List[str], **kwargs) -> List[Tuple[str, float]]:
     try:
         results: Dict = requests.post(
-            manifest.client.host + "/completions", json={"prompt": sequences, **kwargs}
+            manifest.client.host + "/completions", 
+            json={
+                "prompt": sequences, 
+                **kwargs
+            }
         ).json()
-        generations = [(x["text"], x["logprob"]) for x in results["choices"]]
+        generations = [ (x["text"], x["logprob"]) for x in results["choices"] ]
     except Exception as e:
         print(str(e))
         raise RuntimeError(
@@ -70,6 +77,7 @@ def logsumexp(x):
 def generation_multilabel_metric(generations, truth, verbalizer):
     """
     Compute multilabel classification metrics for a list of generations and truth labels.
+
     Args:
         generations: list of strings
         truth: list of lists of strings
@@ -100,7 +108,8 @@ def generation_multilabel_metric(generations, truth, verbalizer):
 def generate_prompts_with_injected_examples(
     dataset: DatasetDict, prompt_template: str, output_column: str, output_template: str
 ) -> Dict[str, List[Tuple[str, str]]]:
-    """Create prompts and inject dataset examples into prompt template.
+    """Create prompts and inject dataset examples into our prompt template.
+
     Assumes that the variable in the Jinja template has the same name as the
     attribute in each dataset example that we want to inject into the prompt.
 
@@ -160,23 +169,6 @@ def generate_text(model, input_ids, max_new_tokens: int = 10) -> Dict[str, torch
     Use a generative model to generate text + logits ("scores") for each output token.
     Use `default_settings` to specify a default setup
     """
-    # NOTE: Unused args in Eleuther Eval harness, so commenting out
-    #   default_settings: Optional[str] = None,
-    #   is_greedy_decoding: bool = True,
-    #   top_k: float = 0.0,
-    #   top_p: float = 0.0,
-    #   num_beams: int = 5,
-    #   max_new_tokens: int = 20
-    # if default_settings == 'greedy':
-    #     is_greedy_decoding = True
-    # elif default_settings == 'beam':
-    #     is_greedy_decoding = True
-    #     num_beams = 5
-    # elif default_settings == 'nucleus':
-    #     is_greedy_decoding = False
-    #     top_p = 0.9
-
-    # TODO - more intelligent prompt truncation
     # Limit the number of new tokens to fit within the model's context window
     max_new_tokens = max(0, min(model.config.n_ctx - input_ids.shape[1], max_new_tokens))
     outputs = model.generate(
@@ -253,6 +245,48 @@ def tokenize_prompts(tokenizer, inputs_by_split) -> Dict[str, List[Tuple[str, st
 ########################################################
 ########################################################
 
+def log_multilabel_metrics(tasks):
+    print("")
+    print("------------------------------------------------------")
+    print(f"----- Accuracy across {len(tasks)} templates --------------------")
+    for label in tasks[0].verbalizer.keys():
+        print("------------------------------------------------------")
+        print(f"---------- {label} ---------------")
+        print("------------------------------------------------------")
+        print(
+            "Average: ",
+            round(
+                sum([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]) / len(metrics), 3
+            ),
+        )
+        print(
+            "Std: ", round(np.std([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3)
+        )
+        print("Min: ", round(min([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
+        print("Max: ", round(max([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
+        print("All: ", [r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()])
+
+def log_classification_metrics(tasks):
+        print("")
+        print("------------------------------------------------------")
+        print(f"---------- Accuracy across {len(tasks)} templates ---------------")
+        print("------------------------------------------------------")
+        print("Average: ", round(sum([r["test"]["accuracy"] for r in metrics.values()]) / len(metrics), 3))
+        print("Std: ", round(np.std([r["test"]["accuracy"] for r in metrics.values()]), 3))
+        print("Min: ", round(min([r["test"]["accuracy"] for r in metrics.values()]), 3))
+        print("Max: ", round(max([r["test"]["accuracy"] for r in metrics.values()]), 3))
+        print("All: ", [r["test"]["accuracy"] for r in metrics.values()])
+
+def log_generation_metrics(tasks):
+    with open(os.path.join(args.path_to_output_dir, "metrics.txt"), "w") as f:
+        f.write("------------------------------------------------------\n")
+        f.write(f"----- BLEU across {len(tasks)} templates --------------------\n")
+        f.write("------------------------------------------------------\n")
+        f.write(f"Average: {round(sum([ r['test']['bleu'] for r in metrics.values()]) / len(metrics), 3)}\n")
+        f.write(f"Std: {round(np.std([ r['test']['bleu'] for r in metrics.values()]), 3)}\n")
+        f.write(f"Min: {round(min([ r['test']['bleu'] for r in metrics.values()]), 3)}\n")
+        f.write(f"Max: {round(max([ r['test']['bleu'] for r in metrics.values()]), 3)}\n")
+        f.write(f"All: {[ r['test']['bleu'] for r in metrics.values()]}\n")
 
 def log_model_tokenizer_config(path_to_output_dir: str, manifest: Manifest):
     model_config: Dict = manifest_model_config(manifest)

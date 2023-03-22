@@ -1,6 +1,5 @@
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from typing import Optional, Dict, Sequence
-from openprompt.utils.logging import logger
 from rouge_score import rouge_scorer, scoring
 
 
@@ -120,7 +119,7 @@ def generation_metric(hypos, refs, metric: Optional[str] = "sentence_bleu"):
 
         try:
             nltk_path = str(nltk.data.find("tokenizers/punkt"))
-            logger.info(f"using nltk from: {nltk_path}")
+            print(f"using nltk from: {nltk_path}")
         except LookupError:
             nltk.download("punkt")
 
@@ -140,7 +139,7 @@ def generation_metric(hypos, refs, metric: Optional[str] = "sentence_bleu"):
             try:
                 sc = sentence_bleu(tokenized_rs, hypo, smoothing_function=smoothie)
             except ValueError:  # TODO ZeroDivisionError
-                logger.warning("math domain error in bleu, set to 0.0. generated sentence: {}".format(hypo))
+                print("math domain error in bleu, set to 0.0. generated sentence: {}".format(hypo))
                 sc = 0.0
             scores.append(sc)
         score = sum(scores) / len(scores)

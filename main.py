@@ -1,56 +1,39 @@
 """
-Hack script for querying language model.
+Script for querying language model.
 
 Example Usage:
 
 python3 -m manifest.api.app \
     --model_type huggingface \
-    --model_name_or_path /local-scratch-nvme/nigam/huggingface/pretrained/gpt-j-6B \
-    --model_generation_type text-generation \
-    --use_hf_parallelize
-
-python3 main.py \
-    --manifest_url http://127.0.0.1:5009 \
-    --path_to_dataset_config prompts/mednli.yaml \
-    --path_to_dataset_dir /local-scratch/nigam/projects/clinical_llm/data/mednli \
-    --path_to_output_dir ./ignore/mednli_gptj_update/
+    --model_name_or_path gpt2 \
+    --model_generation_type text-generation
 
 python3 main.py \
     --manifest_url http://127.0.0.1:5000 \
-    --path_to_dataset_config prompts/medparasimp.yaml \
-    --path_to_dataset_dir /local-scratch/nigam/projects/clinical_llm/data/medparasimp \
-    --path_to_output_dir ./ignore/test/
-
-Some example `model_name_or_path` for Nero:
-    /local-scratch-nvme/nigam/huggingface/pretrained/BioMedLM
-    /local-scratch-nvme/nigam/huggingface/pretrained/Bio_ClinicalBERT
-    /local-scratch-nvme/nigam/huggingface/pretrained/gpt2-small
-
-Some example `args.path_to_dataset_dir` for Nero:
-    /local-scratch/nigam/projects/clinical_llm/data/mednli
-    /local-scratch/nigam/projects/clinical_llm/data/mediqa_nli
-    /local-scratch/nigam/projects/clinical_llm/data/mediqa_rqe
-    /local-scratch/nigam/projects/clinical_llm/data/medparasimp
-    /local-scratch/nigam/projects/clinical_llm/data/scitail
+    --path_to_task tests/mednli/mednli.py \
+    --data_dir ~/downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0.zip \
+    --output_dir ./ignore/mednli/
 """
-import argparse
 import os
-import numpy as np
+import argparse
 import json
 import requests
+import numpy as np
 from manifest import Manifest
-
+from loguru import logger
+from datasets import DatasetDict
 # Custom scripts
-from data import load_data
-from eval import run_classification, run_generation, run_multilabel_classification
-
+from base import load_task
+from eval import run_eval
 
 def main(args):
-    # Load data + prompts
-    dataset, tasks, is_classification, is_multilabel = load_data(args.path_to_dataset_config, args.path_to_dataset_dir)
+    # Load dataset + prompts for specific task
+    dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir)
+    logger.info(f"Finished loading '{task.name}' dataset and task")
 
-    # Logging
-    os.makedirs(args.path_to_output_dir, exist_ok=True)
+    # Setup directory where we will save our outputs / logs
+    os.makedirs(args.output_dir, exist_ok=True)
+    logger.info(f"Will be saving outputs to: '{args.output_dir}'")
 
     # Manifest
     os.environ["no_proxy"] = "localhost, 127.0.0.1"  # Needed on Nero
@@ -62,46 +45,28 @@ def main(args):
     # Test Manifest connection
     try:
         requests.get(args.manifest_url)
-    except Exception:
+    except Exception as e:
+        print(str(e))
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
-    # Determine which splits to evaluation on
-    dataset = {"test": dataset["test"]}
+    # Determine which dataset splits to evaluation on
+    try:
+        splits = args.dataset_splits.split(",")
+    except Exception as e:
+        print(str(e))
+        raise ValueError(f"Error parsing `--dataset_splits`. It should be a comma-separated list, but got: {args.dataset_splits}")
+    dataset: DatasetDict = DatasetDict({ split: dataset[split] for split in splits })
+    logger.info(f"Evaluating on dataset splits: {splits}")
 
     # Run experiments
-    results, metrics = {}, {}
-    for task in tasks:
-        if not is_multilabel and is_classification:
-            # Classification task
-            result, metric = run_classification(
-                manifest,
-                task,
-                dataset,
-                batch_size=args.batch_size,
-                path_to_output_dir=args.path_to_output_dir,
-            )
-        elif not is_multilabel:
-            # Generation task
-            result, metric = run_generation(
-                manifest,
-                task,
-                dataset,
-                batch_size=args.batch_size,
-                path_to_output_dir=args.path_to_output_dir,
-                max_new_tokens=args.max_new_tokens,
-            )
-        else:
-            result, metric = run_multilabel_classification(
-                manifest,
-                task,
-                dataset,
-                batch_size=args.batch_size,
-                path_to_output_dir=args.path_to_output_dir,
-                max_new_tokens=args.max_new_tokens,
-            )
-
-        results[task.id] = result
-        metrics[task.id] = metric
+    result, metric = run_eval(
+        manifest,
+        task,
+        dataset,
+        batch_size=args.batch_size,
+        path_to_output_dir=args.path_to_output_dir,
+        max_new_tokens=args.max_new_tokens,
+    )
 
     # Save metrics
     path_to_metrics_file: str = os.path.join(args.path_to_output_dir, "metrics.json")
@@ -110,45 +75,11 @@ def main(args):
 
     # Print metrics
     if is_multilabel:
-        print("")
-        print("------------------------------------------------------")
-        print(f"----- Accuracy across {len(tasks)} templates --------------------")
-        for label in tasks[0].verbalizer.keys():
-            print("------------------------------------------------------")
-            print(f"---------- {label} ---------------")
-            print("------------------------------------------------------")
-            print(
-                "Average: ",
-                round(
-                    sum([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]) / len(metrics), 3
-                ),
-            )
-            print(
-                "Std: ", round(np.std([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3)
-            )
-            print("Min: ", round(min([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
-            print("Max: ", round(max([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
-            print("All: ", [r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()])
+        log_multilabel_metrics(metrics)
     elif is_classification:
-        print("")
-        print("------------------------------------------------------")
-        print(f"---------- Accuracy across {len(tasks)} templates ---------------")
-        print("------------------------------------------------------")
-        print("Average: ", round(sum([r["test"]["accuracy"] for r in metrics.values()]) / len(metrics), 3))
-        print("Std: ", round(np.std([r["test"]["accuracy"] for r in metrics.values()]), 3))
-        print("Min: ", round(min([r["test"]["accuracy"] for r in metrics.values()]), 3))
-        print("Max: ", round(max([r["test"]["accuracy"] for r in metrics.values()]), 3))
-        print("All: ", [r["test"]["accuracy"] for r in metrics.values()])
+        log_classification_metrics(metrics)
     else:
-        with open(os.path.join(args.path_to_output_dir, "metrics.txt"), "w") as f:
-            f.write("------------------------------------------------------\n")
-            f.write(f"----- BLEU across {len(tasks)} templates --------------------\n")
-            f.write("------------------------------------------------------\n")
-            f.write(f"Average: {round(sum([ r['test']['bleu'] for r in metrics.values()]) / len(metrics), 3)}\n")
-            f.write(f"Std: {round(np.std([ r['test']['bleu'] for r in metrics.values()]), 3)}\n")
-            f.write(f"Min: {round(min([ r['test']['bleu'] for r in metrics.values()]), 3)}\n")
-            f.write(f"Max: {round(max([ r['test']['bleu'] for r in metrics.values()]), 3)}\n")
-            f.write(f"All: {[ r['test']['bleu'] for r in metrics.values()]}\n")
+        log_generation_metrics(metrics)
     print("done!")
 
 
@@ -158,26 +89,41 @@ if __name__ == "__main__":
     parser.add_argument(
         "--manifest_url",
         type=str,
-        help="Host + port where Manifest server is running, e.g. 'localhost:5000'",
+        help="Full URL where Manifest server is running, e.g. 'http://localhost:5000'. Make sure to include 'http' or 'https'.",
         required=True,
     )
     parser.add_argument(
-        "--path_to_dataset_config",
+        "--path_to_task",
         type=str,
-        help="Path to configuration YAML for this dataset",
+        help="Path to configuration .py file for this task",
         required=True,
     )
     parser.add_argument(
-        "--path_to_dataset_dir",
-        type=str,
-        help="Path to DIRECTORY containing your dataset",
-        required=True,
-    )
-    parser.add_argument(
-        "--path_to_output_dir",
+        "--output_dir",
         type=str,
         help="Path to DIRECTORY to output logs / results / metrics",
         required=True,
+    )
+    
+    # Dataset loading/splits
+    parser.add_argument(
+        "--dataloader",
+        type=str,
+        help="Path to dataloader .py file (if applicable). Passed to huggingface's load_dataset() as `dataloader` kwarg.",
+        required=False,
+    )
+    parser.add_argument(
+        "--data_dir",
+        type=str,
+        help="Path to DIRECTORY containing your dataset (if applicable). Passed to huggingface's load_dataset() as `data_dir` kwarg.",
+        required=False,
+    )
+    parser.add_argument(
+        "--dataset_splits",
+        type=str,
+        help="Comma-separated list of splits to evaluate, e.g. 'train,test,val'. Default is 'test'",
+        required=False,
+        default="test",
     )
 
     # Optional
@@ -232,4 +178,8 @@ if __name__ == "__main__":
         default=0.9,
     )
     args = parser.parse_args()
+    
+    if not (args.manifest_url.startswith("http://") or args.manifest_url.startswith("https://")):
+        raise ValueError("Please include 'http://' or 'https://' in your manifest_url. If you're running on 'localhost:5000', try 'http://localhost:5000'")
+
     main(args)

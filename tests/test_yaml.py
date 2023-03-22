@@ -1,4 +1,4 @@
-from data import load_data
+from load import load_data
 
 
 def test_yaml():

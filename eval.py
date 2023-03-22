@@ -4,7 +4,6 @@ Helper functions for classification tasks
 from tqdm import tqdm
 from typing import List, Dict, Tuple
 from sklearn.metrics import classification_report
-from openprompt.utils.metrics import generation_metric
 import numpy as np
 from utils import (
     generate_prompts_with_injected_examples,
@@ -20,43 +19,51 @@ from utils import (
     log_generations,
     log_generation_results,
 )
-from data import Task
+from metrics import generation_metric
+from base import Task
 import pandas as pd
+from base import TaskType, Prompt
+from datasets import DatasetDict
 
+def run_eval(manifest, task: Task, dataset: DatasetDict, batch_size: int = 10, path_to_output_dir: str = "./output/", *args, **kwargs):
+    prompts: List[Prompt] = task.prompts
 
-def run_task(func):
-    def wrapper(
-        manifest, task: Task, dataset, batch_size: int = 10, path_to_output_dir: str = "./output/", *args, **kwargs
-    ):
-        # Setup
-        prompt_template: str = task.template
-        output_column: str = task.output_column
-        output_template: str = task.output_template
+    # Load dataset into prompt format
+    inputs_by_split: Dict[str, List[Tuple[str, str]]] = generate_prompts_with_injected_examples(
+        dataset, prompt_template, output_column, output_template
+    )
 
-        # Load dataset into prompt format
-        inputs_by_split: Dict[str, List[Tuple[str, str]]] = generate_prompts_with_injected_examples(
-            dataset, prompt_template, output_column, output_template
-        )
+    # Logging
+    log_task_config(path_to_output_dir, task, dataset)
+    log_model_tokenizer_config(path_to_output_dir, manifest)
 
-        # Logging
-        log_task_config(path_to_output_dir, task, dataset)
-        log_model_tokenizer_config(path_to_output_dir, manifest)
+    # Run classification/generation task
+    if task.task_type in [TaskType.BINARY_CLASSIFICATION, TaskType.MULTICLASS_CLASSIFICATION]:
+        func = run_classification
+    elif task.task_type == TaskType.MULTILABEL_CLASSIFICATION:
+        func = run_multilabel_classification
+    elif task.task_type == TaskType.GENERATION:
+        func = run_generation
+    else:
+        raise ValueError(f"Task type '{task.task_type}' not supported")
 
-        # Run classification/generation task
-        results, metrics = func(manifest, task, inputs_by_split, batch_size, path_to_output_dir, *args, **kwargs)
+    results, metrics = func(
+        manifest,
+        task,
+        inputs_by_split,
+        batch_size=batch_size,
+        path_to_output_dir=path_to_output_dir,
+        *args,
+        **kwargs,
+    )
+    # Logging
+    for split in results.keys():
+        prompts = results[split][:, 0]
+        generations = results[split][:, 1]
+        log_generations(path_to_output_dir, task, split, prompts, generations)
 
-        # Logging
-        for split in results.keys():
-            prompts = results[split][:, 0]
-            generations = results[split][:, 1]
-            log_generations(path_to_output_dir, task, split, prompts, generations)
+    return results, metrics
 
-        return results, metrics
-
-    return wrapper
-
-
-@run_task
 def run_classification(
     manifest,
     task,
@@ -139,8 +146,6 @@ def run_classification(
 
     return results, metrics
 
-
-@run_task
 def run_generation(
     manifest,
     task,
@@ -181,8 +186,6 @@ def run_generation(
 
     return results, metrics
 
-
-@run_task
 def run_multilabel_classification(
     manifest,
     task,
