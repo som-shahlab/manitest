@@ -35,7 +35,7 @@ python3 main.py \
     --dataset_splits test,train
 ```
 
-## Create your own task
+## How to create your own task
 
 We recommend starting from the `task_template.py` file as a template. You can also view `tests/mednli/mednli.py` or  `tests/scitail/scitail.py` for worked-out examples of tasks.
 
@@ -95,3 +95,11 @@ python3 main.py \
 - [X] Abstract things to work on not Nero (e.g. load HF models from Hub, load local HF models, hit external APIs)
 - [X] Clean up output to be more user friendly
 - [X] Convert .yaml prompt files to .py `Task` files
+
+## Development
+
+To run pre-commit checks:
+
+```
+pre-commit run --all-files
+```

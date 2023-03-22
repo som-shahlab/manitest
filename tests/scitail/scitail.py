@@ -1,5 +1,5 @@
 from datasets import load_dataset
-from typing import List, Optional, Dict
+from typing import List, Optional
 from base import Prompt, TaskType, Task
 
 ####################################
@@ -38,7 +38,10 @@ class Prompt2(ScitailPrompt):
     name: str = "two_sentences"
 
     def generate_prompt(self, example: dict) -> str:
-        return f"Sentence 1: {example['premise']}\n\nSentence 2: {example['hypothesis']}\n\nQuestion: Does Sentence 1 entail Sentence 2?  yes or no"
+        return (
+            f"Sentence 1: {example['premise']}\n\nSentence 2: {example['hypothesis']}\n\n"
+            "Question: Does Sentence 1 entail Sentence 2?  yes or no"
+        )
 
 
 class Prompt3(ScitailPrompt):

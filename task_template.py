@@ -6,6 +6,7 @@ from base import Prompt, TaskType, Task
 # Prompt definitions
 ####################################
 
+
 class YourPrompt1(Prompt):
     # Unique name for this prompt
     name: str = "<unique name for this prompt 1>"
@@ -14,13 +15,19 @@ class YourPrompt1(Prompt):
     verbalizer: dict = {
         "very positive": ["super", "fantastic"],
         "positive": ["good", "not bad"],
-        "negative": ["meh", "not good", ],
+        "negative": [
+            "meh",
+            "not good",
+        ],
         "very negative": ["terrible"],
     }
 
     # This method takes a dataset example and returns a prompted version of that example
     def generate_prompt(self, example: dict) -> str:
-        return f"On a scale of very positive to very negative, what is the sentiment of the sentence {example['sentence']}?"
+        return (
+            "On a scale of very positive to very negative,"
+            f" what is the sentiment of the sentence {example['sentence']}?"
+        )
 
 
 class YourPrompt2(Prompt):
@@ -31,7 +38,10 @@ class YourPrompt2(Prompt):
     verbalizer: dict = {
         "very positive": ["super", "fantastic"],
         "positive": ["good", "not bad"],
-        "negative": ["meh", "not good", ],
+        "negative": [
+            "meh",
+            "not good",
+        ],
         "very negative": ["terrible"],
     }
 
@@ -44,10 +54,11 @@ class YourPrompt2(Prompt):
 # Task definition
 ####################################
 
+
 class YourTask(Task):
     # name for your task
     name: str = "<name for task>"
-    # TaskType is an enum with possible values: 
+    # TaskType is an enum with possible values:
     # BINARY_CLASSIFICATION, MULTICLASS_CLASSIFICATION, MULTILABEL_CLASSIFICATION, GENERATION
     task_type: TaskType = TaskType.BINARY_CLASSIFICATION
 
@@ -60,7 +71,7 @@ class YourTask(Task):
 
     # Load your dataset using HuggingFace's datasets library
     def load_dataset(self, dataloader: Optional[str] = None, data_dir: Optional[str] = None):
-        return load_dataset(dataloader, data_dir=data_dir )
+        return load_dataset(dataloader, data_dir=data_dir)
 
 
 # Important -- you must set `Export` equal to your task so that it can be imported by the eval harness!

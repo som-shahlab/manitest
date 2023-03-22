@@ -4,7 +4,7 @@ import importlib.util
 from abc import abstractmethod
 from enum import Enum
 from datasets import DatasetDict
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional
 from loguru import logger
 
 
@@ -13,6 +13,7 @@ class TaskType(Enum):
     MULTICLASS_CLASSIFICATION = 0
     MULTILABEL_CLASSIFICATION = 1
     GENERATION = 2
+
 
 class Prompt:
     name: str
@@ -29,6 +30,7 @@ class Prompt:
 
     def __repr__(self) -> str:
         return f"Prompt(name={self.name})"
+
 
 class Task:
     name: str
@@ -61,21 +63,26 @@ def load_python_module_from_python_file(path_to_python_file: str):
     spec.loader.exec_module(module)
     return module
 
+
 def load_task(path_to_task: str, dataloader: Optional[str], data_dir: Optional[str]) -> Tuple[DatasetDict, Task]:
     # Load config.py file
     module = load_python_module_from_python_file(path_to_task)
     task: Task = module.Export()
     logger.info(f"Loaded task '{task.name}' with task type '{task.task_type}'")
-    
+
     # Validate task
-    unique_prompt_names: set = set([ p.name for p in task.prompts])
+    unique_prompt_names: set = set([p.name for p in task.prompts])
     if len(unique_prompt_names) != len(task.prompts):
-        raise ValueError(f"Duplicate prompt names found in task '{task.name}'. All prompt's must have a unique `name` attribute set.")
+        raise ValueError(
+            f"Duplicate prompt names found in task '{task.name}'."
+            " All prompt's must have a unique `name` attribute set."
+        )
 
     # Load dataset
     dataset = task.load_dataset(dataloader=dataloader, data_dir=data_dir)
     logger.info(
-        f"Loaded dataset {str(dataloader) + ' ' if dataloader else ''}from '{data_dir if data_dir else 'HuggingFace Hub'}'"
+        f"Loaded dataset{' ' + str(dataloader) if dataloader else ''}"
+        f" from '{data_dir if data_dir else 'HuggingFace Hub'}'"
     )
     logger.info(dataset)
 

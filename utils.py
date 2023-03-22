@@ -90,21 +90,3 @@ def generation_multilabel_metric(generations, truth, verbalizer):
         results[label_string] = classification_report(labels, predictions, output_dict=True)
 
     return results
-
-def log_multilabel_metrics(tasks):
-    # TODO - update
-    print("")
-    print("------------------------------------------------------")
-    print(f"----- Accuracy across {len(tasks)} templates --------------------")
-    for label in tasks[0].verbalizer.keys():
-        print("------------------------------------------------------")
-        print(f"---------- {label} ---------------")
-        print("------------------------------------------------------")
-        print(
-            "Average: ",
-            round(sum([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]) / len(metrics), 3),
-        )
-        print("Std: ", round(np.std([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
-        print("Min: ", round(min([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
-        print("Max: ", round(max([r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()]), 3))
-        print("All: ", [r["test"]["multilabel_score"][label]["accuracy"] for r in metrics.values()])

@@ -1,6 +1,7 @@
 from typing import Optional
 from rouge_score import rouge_scorer, scoring
 
+
 def generation_metric(hypos, refs, metric: Optional[str] = "sentence_bleu"):
     r"""Some basic metric function for generation. However, many generation tasks
     has their own evaluation bash scripts.

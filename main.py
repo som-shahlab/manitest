@@ -8,7 +8,12 @@ python3 -m manifest.api.app \
     --model_name_or_path gpt2 \
     --model_generation_type text-generation
 
-python3 main.py --manifest_url http://127.0.0.1:5000 --path_to_task tests/mednli/mednli.py --output_dir ./ignore --data_dir ~/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ --dataset_splits test,train
+python3 main.py \
+    --manifest_url http://127.0.0.1:5000 \
+    --path_to_task tests/mednli/mednli.py \
+    --output_dir ./ignore \
+    --data_dir ~/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
+    --dataset_splits test,train
 """
 import os
 import argparse
@@ -74,7 +79,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--manifest_url",
         type=str,
-        help="Full URL where Manifest server is running, e.g. 'http://localhost:5000'. Make sure to include 'http' or 'https'.",
+        help=(
+            "Full URL where Manifest server is running, e.g. 'http://localhost:5000'."
+            " Make sure to include 'http' or 'https'."
+        ),
         required=True,
     )
     parser.add_argument(
@@ -94,13 +102,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataloader",
         type=str,
-        help="Path to dataloader .py file (if applicable). Passed to huggingface's load_dataset() as `dataloader` kwarg.",
+        help=(
+            "Path to dataloader .py file (if applicable)."
+            "Passed to huggingface's load_dataset() as `dataloader` kwarg."
+        ),
         required=False,
     )
     parser.add_argument(
         "--data_dir",
         type=str,
-        help="Path to DIRECTORY containing your dataset (if applicable). Passed to huggingface's load_dataset() as `data_dir` kwarg.",
+        help=(
+            "Path to DIRECTORY containing your dataset (if applicable)."
+            "Passed to huggingface's load_dataset() as `data_dir` kwarg."
+        ),
         required=False,
     )
     parser.add_argument(
@@ -166,7 +180,8 @@ if __name__ == "__main__":
 
     if not (args.manifest_url.startswith("http://") or args.manifest_url.startswith("https://")):
         raise ValueError(
-            "Please include 'http://' or 'https://' in your manifest_url. If you're running on 'localhost:5000', try 'http://localhost:5000'"
+            "Please include 'http://' or 'https://' in your manifest_url."
+            " If you're running on 'localhost:5000', try 'http://localhost:5000'"
         )
 
     main(args)
