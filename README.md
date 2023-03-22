@@ -100,6 +100,11 @@ python3 main.py \
 
 To run pre-commit checks:
 
-```
+```bash
 pre-commit run --all-files
+```
+
+To run tests:
+```bash
+pytest tests
 ```
