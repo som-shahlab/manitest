@@ -2,6 +2,7 @@
 myvenv/
 .venv/
 .DS_Store
+*.DS_Store
 ignore/
 
 # Byte-compiled / optimized / DLL files
