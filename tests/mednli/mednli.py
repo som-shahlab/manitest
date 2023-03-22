@@ -13,9 +13,6 @@ class MedNLIPrompt(Prompt):
         "not entailment": ["no "],
     }
 
-    def generate_llm_queries(self, example: dict) -> Dict[str, List[str]]:
-        return super().generate_llm_queries_using_verbalizer(example, self.verbalizer)
-
     def get_label(self, example: dict):
         """Maps attributes of a dataset example to a class (i.e. a [key] in `verbalizer`)"""
         if example["label"] in ["entailment"]:

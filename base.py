@@ -38,20 +38,6 @@ class Prompt:
         """Gets the ground truth label for a dataset example"""
         return ""
 
-    @abstractmethod
-    def generate_llm_queries(self, example: dict) -> Dict[str, List[str]]:
-        """Generate queries to feed into the LLM for evaluating the given dataset example.
-            Returns a dict where...
-                [key] = Label for a specific class
-                [value] = List of queries for that label.
-            """
-        return {}
-
-    def generate_llm_queries_using_verbalizer(self, example: dict, verbalizer: dict) -> Dict[str, List[str]]:
-        """Use a simple dictionary as a verbalizer to generate LLM queries for a prompt"""
-        prompt: str = self.generate_prompt(example)
-        return {label: [f"{prompt} {term}" for term in terms] for label, terms in verbalizer.items()}
-
     def __repr__(self) -> str:
         return f"Prompt(name={self.name})"
 

@@ -13,14 +13,6 @@ class ScitailPrompt(Prompt):
         "not entailment": ["no "],
     }
 
-    def generate_llm_queries(self, example: dict) -> Dict[str, List[str]]:
-        """Generate queries to feed into the LLM for evaluating the given dataset example.
-            Returns a dict where...
-                [key] = Label for a specific class
-                [value] = List of queries for that label.
-            """
-        return super().generate_llm_queries_using_verbalizer(example, self.verbalizer)
-
     def get_label(self, example: dict):
         """Gets the ground truth label for a dataset example"""
         if example["label"] in ["entailment"]:
