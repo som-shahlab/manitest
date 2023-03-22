@@ -14,17 +14,6 @@ class TaskType(Enum):
     MULTILABEL_CLASSIFICATION = 1
     GENERATION = 2
 
-
-class Task:
-    name: str
-    task_type: TaskType
-
-    def __init__(self):
-        self.prompts: List[Prompt] = []
-
-    def __repr__(self) -> str:
-        return f"Task(name={self.name}, task_type={self.task_type}, prompts={self.prompts})"
-
 class Prompt:
     name: str
 
@@ -41,6 +30,23 @@ class Prompt:
     def __repr__(self) -> str:
         return f"Prompt(name={self.name})"
 
+class Task:
+    name: str
+    task_type: TaskType
+    prompts: List[Prompt]
+
+    def __init__(self):
+        self.prompts: List[Prompt] = []
+
+    def __repr__(self) -> str:
+        return f"Task(name={self.name}, task_type={self.task_type}, prompts={self.prompts})"
+
+    @abstractmethod
+    def load_dataset(self, dataloader: Optional[str], data_dir: Optional[str]) -> DatasetDict:
+        """Loads the dataset for this task. Returns a DatasetDict."""
+        return DatasetDict()
+
+
 def load_python_module_from_python_file(path_to_python_file: str):
     path_to_python_file = os.path.abspath(path_to_python_file)
     if (
@@ -54,7 +60,6 @@ def load_python_module_from_python_file(path_to_python_file: str):
     sys.modules["module.name"] = module
     spec.loader.exec_module(module)
     return module
-
 
 def load_task(path_to_task: str, dataloader: Optional[str], data_dir: Optional[str]) -> Tuple[DatasetDict, Task]:
     # Load config.py file
