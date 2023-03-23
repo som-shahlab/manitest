@@ -14,7 +14,7 @@ _Note: We use our own fork of Manifest, which we hope to merge back into the mai
 git clone https://github.com/som-shahlab/llm_eval_harness
 cd llm_eval_harness
 # Create virtual environment
-conda create --name llm_eval_harness_env python=3.10
+conda create --name llm_eval_harness_env python=3.10 -y
 conda activate llm_eval_harness_env
 pip3 install -r requirements.txt
 ```
@@ -28,7 +28,8 @@ To run the eval harness, you must first have a Manifest server running in the ba
 python3 -m manifest.api.app \
     --model_type huggingface \
     --model_name_or_path gpt2 \
-    --model_generation_type text-generation &
+    --model_generation_type text-generation \
+    --port 5000 &
 
 # Run evaluation harness on your desired task
 python3 main.py \
@@ -83,6 +84,26 @@ python3 main.py \
     --path_to_task path/to/your_task.py \
     --output_dir ./ignore
 ```
+
+## Special setup instructions
+
+If you are running this on Stanford's Nero computing environment, you will need to download the HuggingFace dataset, HuggingFace dataloader, and HuggingFace model that you want to use. Thus, your commands will look like the following:
+
+```
+python3 -m manifest.api.app \
+    --model_type huggingface \
+    --model_name_or_path /local-scratch-nvme/nigam/huggingface/pretrained/gpt2-small \
+    --model_generation_type text-generation
+
+python3 main.py \
+    --manifest_url http://127.0.0.1:5000 \
+    --path_to_task tests/mednli/mednli.py \
+    --output_dir ./ignore \
+    --data_dir /local-scratch/nigam/projects/clinical_llm/data/mednli/ \
+    --dataset_splits test \
+    --dataloader /local-scratch/nigam/projects/clinical_llm/dataloaders/mednli/mednli.py
+```
+
 ## Todos
 
 - [ ] Combine Manifest command with `main.py` command into a single command
