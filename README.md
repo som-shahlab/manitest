@@ -13,7 +13,8 @@ _Note: We use our own fork of Manifest, which we hope to merge back into the mai
 # Download repo
 git clone https://github.com/som-shahlab/llm_eval_harness
 cd llm_eval_harness
-# Create virtual environment
+
+# Create virtual environment + install dependencies
 conda create --name llm_eval_harness_env python=3.10 -y
 conda activate llm_eval_harness_env
 pip3 install -r requirements.txt
@@ -39,6 +40,14 @@ python3 main.py \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
     --dataset_splits test,train
 ```
+
+## Tips
+
+If you're using a causal LM (e.g. GPT, OPT, Llama, Bloom)...
+* Run Manifest with the `--model_generation_type text-generation` flag
+
+If you're using a seq2seq LM (e.g. T5, T0)...
+* Run Manifest with the `--model_generation_type text2text-generation` flag
 
 ## How to create your own task
 
@@ -85,13 +94,16 @@ python3 main.py \
     --output_dir ./ignore
 ```
 
-## Special setup instructions
+## Special setup instructions for computers without Internet access
 
-If you are running this on Stanford's Nero computing environment, you will need to download the HuggingFace dataset, HuggingFace dataloader, and HuggingFace model that you want to use. Thus, your commands will look like the following:
+If you are running this on a computer without internet access (e.g. Stanford Nero), you will need to download the HuggingFace dataset, dataloader, and model that you want to use. 
+
+Assuming you've downloaded these, your commands will look like the following:
 
 ```
 python3 -m manifest.api.app \
     --model_type huggingface \
+    # Path to locally downloaded HuggingFace model
     --model_name_or_path /local-scratch-nvme/nigam/huggingface/pretrained/gpt2-small \
     --model_generation_type text-generation
 
@@ -99,8 +111,10 @@ python3 main.py \
     --manifest_url http://127.0.0.1:5000 \
     --path_to_task tests/mednli/mednli.py \
     --output_dir ./ignore \
+    # Path to locally downloaded HuggingFace dataset
     --data_dir /local-scratch/nigam/projects/clinical_llm/data/mednli/ \
     --dataset_splits test \
+    # Path to locally downloaded HuggingFace dataloader
     --dataloader /local-scratch/nigam/projects/clinical_llm/dataloaders/mednli/mednli.py
 ```
 
