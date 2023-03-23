@@ -13,7 +13,8 @@ _Note: We use our own fork of Manifest, which we hope to merge back into the mai
 # Download repo
 git clone https://github.com/som-shahlab/llm_eval_harness
 cd llm_eval_harness
-# Create virtual environment
+
+# Create virtual environment + install dependencies
 conda create --name llm_eval_harness_env python=3.10 -y
 conda activate llm_eval_harness_env
 pip3 install -r requirements.txt
@@ -39,6 +40,14 @@ python3 main.py \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
     --dataset_splits test,train
 ```
+
+## Tips
+
+If you're using a causal LM (e.g. GPT, OPT, Llama, Bloom)...
+* Run Manifest with the `--model_generation_type text-generation` flag
+
+If you're using a seq2seq LM (e.g. T5, T0)...
+* Run Manifest with the `--model_generation_type text2text-generation` flag
 
 ## How to create your own task
 
