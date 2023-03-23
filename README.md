@@ -10,8 +10,12 @@ _Note: We use our own fork of Manifest, which we hope to merge back into the mai
 ## Installation
 
 ```bash
+# Download repo
 git clone https://github.com/som-shahlab/llm_eval_harness
 cd llm_eval_harness
+# Create virtual environment
+conda create --name llm_eval_harness_env python=3.10
+conda activate llm_eval_harness_env
 pip3 install -r requirements.txt
 ```
 
