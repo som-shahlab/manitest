@@ -1,9 +1,11 @@
-# Evaluation Harness for LLMs (Manifest + EleutherAI Harness)
+# Manitesto
 
-A simplified version of the [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) built on top of [Manifest](https://github.com/som-shahlab/manifest).
+### An LLM evaluation harness built with Manifest + EleutherAI
+
+**Manitesto** is a simplified version of the [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) that uses [Manifest](https://github.com/som-shahlab/manifest) as its backend model server.
 
 * [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) allows you to evaluate a large language model (LLM) on tasks formulated as prompts.
-* [Manifest](https://github.com/som-shahlab/manifest) is a model server that enables faster inference via built-in support for HuggingFace Parallelize, Accelerate, DeepSpeed, and BitsAndBytes.
+* [Manifest](https://github.com/som-shahlab/manifest) is a model server that enables fast inference via built-in support for HuggingFace Parallelize, Accelerate, DeepSpeed, and BitsAndBytes.
 
 _Note: We use our own fork of Manifest, which we hope to merge back into the main repo soon._
 
