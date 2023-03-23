@@ -33,12 +33,13 @@ python3 -m manifest.api.app \
     --port 5000 &
 
 # Run evaluation harness on your desired task
+# Note: To run the MedNLI, you must download the dataset first from: https://physionet.org/content/mednli/1.0.0/
 python3 main.py \
     --manifest_url http://127.0.0.1:5000 \
     --path_to_task tests/mednli/mednli.py \
     --output_dir ./ignore \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
-    --dataset_splits test,train
+    --dataset_splits test
 ```
 
 ## Tips
@@ -57,25 +58,31 @@ To create your own task, you must...
 
 1. Create a file called `your_task.py`. You can save this anywhere.
 
-2. Create a `Task` class that inherits from `manifest.base.Task`. It must define three attributes and one method. Attributes: `name`, `task_type`, and `prompts`. Methods: `load_dataset()`.
+2. Create a `Task` class that inherits from `manifest.base.Task`. 
+
+It must define three attributes (`name`, `task_type`, and `prompts`) and one methods (`load_dataset()`).
 
 ```python
 from base import Task, TaskType
 class YourTask(Task):
-    name = "Your Task Name"
-    task_type = TaskType.GENERATION
+    name: str = "Your Task Name"
+    task_type: TaskType = TaskType.GENERATION
 
     def load_dataset(self, dataloader: Optional[str], data_dir: Optional[str]) -> DatasetDict:
         # Load your dataset here
         return DatasetDict()
 ```
 
-3. Create a `Prompt` class that inherits from `manifest.base.Prompt` for each individual prompt associated with your task. It must define one attribute and two methods. Attributes: `name`. Methods: `generate_prompt()` and `get_label()`.
+3. Create a `Prompt` class that inherits from `manifest.base.Prompt` for each individual prompt associated with your task.
+
+It must define one attribute (`name`) and two methods (`generate_prompt()` and `get_label()`).
 
 ```python
 from base import Prompt
 class YourPrompt(Prompt)
-    name = "Some globally unique name for this prompt"
+
+    name: str = "Some globally unique name for this prompt"
+    
     def generate_prompt(self, example: dict) -> str:
         """Takes a dataset example and returns a prompted version of that example."""
         return f"Premise: {example['premise']}\nHypothesis: {example['hypothesis']}. Does the premise entail the hypothesis?"
