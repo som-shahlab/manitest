@@ -64,6 +64,7 @@ It must define three attributes (`name`, `task_type`, and `prompts`) and one met
 
 ```python
 from base import Task, TaskType
+
 class YourTask(Task):
     name: str = "Your Task Name"
     task_type: TaskType = TaskType.GENERATION
@@ -79,8 +80,8 @@ It must define one attribute (`name`) and two methods (`generate_prompt()` and `
 
 ```python
 from base import Prompt
-class YourPrompt(Prompt)
 
+class YourPrompt(Prompt)
     name: str = "Some globally unique name for this prompt"
     
     def generate_prompt(self, example: dict) -> str:
