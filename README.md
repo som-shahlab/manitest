@@ -1,8 +1,8 @@
-# Manitest
+# ManiTest
 
 ### An LLM evaluation harness built with Manifest + EleutherAI
 
-**Manitest** is a simplified version of the [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) that uses [Manifest](https://github.com/som-shahlab/manifest) as its backend model server.
+**ManiTest** is a simplified version of the [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) that uses [Manifest](https://github.com/som-shahlab/manifest) as its backend model server.
 
 * [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) allows you to evaluate a large language model (LLM) on tasks formulated as prompts.
 * [Manifest](https://github.com/som-shahlab/manifest) is a model server that enables fast inference via built-in support for HuggingFace Parallelize, Accelerate, DeepSpeed, and BitsAndBytes.
