@@ -1,5 +1,5 @@
-manifest-ml[api] @ git+https://github.com/som-shahlab/manifest.git#egg=manifest-ml[api]
-loguru==0.6.0
 datasets==2.10.1
-scikit-learn==1.2.2
+loguru==0.6.0
+manifest-ml[api] @ git+https://github.com/som-shahlab/manifest.git#egg=manifest-ml[api]
 rouge_score==0.1.2
+scikit-learn==1.2.2

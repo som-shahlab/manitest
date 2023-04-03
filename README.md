@@ -60,7 +60,7 @@ To create your own task, you must...
 
 1. Create a file called `your_task.py`. You can save this anywhere.
 
-2. Create a `Task` class that inherits from `manifest.base.Task`. 
+2. Create a `Task` class that inherits from `manifest.base.Task`.
 
 It must define three attributes (`name`, `task_type`, and `prompts`) and one methods (`load_dataset()`).
 
@@ -85,7 +85,7 @@ from base import Prompt
 
 class YourPrompt(Prompt)
     name: str = "Some globally unique name for this prompt"
-    
+
     def generate_prompt(self, example: dict) -> str:
         """Takes a dataset example and returns a prompted version of that example."""
         return f"Premise: {example['premise']}\nHypothesis: {example['hypothesis']}. Does the premise entail the hypothesis?"
@@ -106,7 +106,7 @@ python3 main.py \
 
 ## Special setup instructions for computers without Internet access
 
-If you are running this on a computer without internet access (e.g. Stanford Nero), you will need to download the HuggingFace dataset, dataloader, and model that you want to use. 
+If you are running this on a computer without internet access (e.g. Stanford Nero), you will need to download the HuggingFace dataset, dataloader, and model that you want to use.
 
 Assuming you've downloaded these, your commands will look like the following:
 
