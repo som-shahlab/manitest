@@ -10,7 +10,7 @@ from base import Prompt, TaskType, Task
 class MedNLIPrompt(Prompt):
     verbalizer: dict = {
         "entailment": ["yes"],
-        "not entailment": ["no "],
+        "not entailment": ["no"],
     }
 
     def get_label(self, example: dict):
@@ -27,7 +27,7 @@ class Prompt1(MedNLIPrompt):
     name: str = "suppose"
     verbalizer: dict = {
         "entailment": ["entailment"],
-        "not entailment": ["neutral "],
+        "not entailment": ["neutral"],
     }
 
     def generate_prompt(self, example: dict) -> str:
@@ -55,7 +55,7 @@ class Prompt4(MedNLIPrompt):
     name: str = "licensed_to_say"
     verbalizer: dict = {
         "entailment": ["true"],
-        "not entailment": ["false "],
+        "not entailment": ["false"],
     }
 
     def generate_prompt(self, example: dict) -> str:

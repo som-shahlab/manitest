@@ -1,17 +1,24 @@
-# Evaluation Harness for LLMs (Manifest + EleutherAI Harness)
+# ManiTest
 
-A simplified version of the [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) built on top of [Manifest](https://github.com/som-shahlab/manifest).
+### An LLM evaluation harness built with Manifest + EleutherAI
+
+**ManiTest** is a simplified version of the [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) that uses [Manifest](https://github.com/som-shahlab/manifest) as its backend model server.
 
 * [Eleuther-AI LLM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness) allows you to evaluate a large language model (LLM) on tasks formulated as prompts.
-* [Manifest](https://github.com/som-shahlab/manifest) is a model server that enables faster inference via built-in support for HuggingFace Parallelize, Accelerate, DeepSpeed, and BitsAndBytes.
+* [Manifest](https://github.com/som-shahlab/manifest) is a model server that enables fast inference via built-in support for HuggingFace Parallelize, Accelerate, DeepSpeed, and BitsAndBytes.
 
 _Note: We use our own fork of Manifest, which we hope to merge back into the main repo soon._
 
 ## Installation
 
 ```bash
+# Download repo
 git clone https://github.com/som-shahlab/llm_eval_harness
 cd llm_eval_harness
+
+# Create virtual environment + install dependencies
+conda create --name llm_eval_harness_env python=3.10 -y
+conda activate llm_eval_harness_env
 pip3 install -r requirements.txt
 ```
 
@@ -24,16 +31,26 @@ To run the eval harness, you must first have a Manifest server running in the ba
 python3 -m manifest.api.app \
     --model_type huggingface \
     --model_name_or_path gpt2 \
-    --model_generation_type text-generation &
+    --model_generation_type text-generation \
+    --port 5000 &
 
 # Run evaluation harness on your desired task
+# Note: To run the MedNLI task, you must first download the dataset from: https://physionet.org/content/mednli/1.0.0/
 python3 main.py \
     --manifest_url http://127.0.0.1:5000 \
     --path_to_task tests/mednli/mednli.py \
     --output_dir ./ignore \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
-    --dataset_splits test,train
+    --dataset_splits test
 ```
+
+## Tips
+
+If you're using a causal LM (e.g. GPT, OPT, Llama, Bloom)...
+* Run Manifest with the `--model_generation_type text-generation` flag
+
+If you're using a seq2seq LM (e.g. T5, T0)...
+* Run Manifest with the `--model_generation_type text2text-generation` flag
 
 ## How to create your own task
 
@@ -43,25 +60,32 @@ To create your own task, you must...
 
 1. Create a file called `your_task.py`. You can save this anywhere.
 
-2. Create a `Task` class that inherits from `manifest.base.Task`. It must define three attributes and one method. Attributes: `name`, `task_type`, and `prompts`. Methods: `load_dataset()`.
+2. Create a `Task` class that inherits from `manifest.base.Task`. 
+
+It must define three attributes (`name`, `task_type`, and `prompts`) and one methods (`load_dataset()`).
 
 ```python
 from base import Task, TaskType
+
 class YourTask(Task):
-    name = "Your Task Name"
-    task_type = TaskType.GENERATION
+    name: str = "Your Task Name"
+    task_type: TaskType = TaskType.GENERATION
 
     def load_dataset(self, dataloader: Optional[str], data_dir: Optional[str]) -> DatasetDict:
         # Load your dataset here
         return DatasetDict()
 ```
 
-3. Create a `Prompt` class that inherits from `manifest.base.Prompt` for each individual prompt associated with your task. It must define one attribute and two methods. Attributes: `name`. Methods: `generate_prompt()` and `get_label()`.
+3. Create a `Prompt` class that inherits from `manifest.base.Prompt` for each individual prompt associated with your task.
+
+It must define one attribute (`name`) and two methods (`generate_prompt()` and `get_label()`).
 
 ```python
 from base import Prompt
+
 class YourPrompt(Prompt)
-    name = "Some globally unique name for this prompt"
+    name: str = "Some globally unique name for this prompt"
+    
     def generate_prompt(self, example: dict) -> str:
         """Takes a dataset example and returns a prompted version of that example."""
         return f"Premise: {example['premise']}\nHypothesis: {example['hypothesis']}. Does the premise entail the hypothesis?"
@@ -79,6 +103,31 @@ python3 main.py \
     --path_to_task path/to/your_task.py \
     --output_dir ./ignore
 ```
+
+## Special setup instructions for computers without Internet access
+
+If you are running this on a computer without internet access (e.g. Stanford Nero), you will need to download the HuggingFace dataset, dataloader, and model that you want to use. 
+
+Assuming you've downloaded these, your commands will look like the following:
+
+```
+python3 -m manifest.api.app \
+    --model_type huggingface \
+    # Path to locally downloaded HuggingFace model
+    --model_name_or_path /local-scratch-nvme/nigam/huggingface/pretrained/gpt2-small \
+    --model_generation_type text-generation
+
+python3 main.py \
+    --manifest_url http://127.0.0.1:5000 \
+    --path_to_task tests/mednli/mednli.py \
+    --output_dir ./ignore \
+    # Path to locally downloaded HuggingFace dataset
+    --data_dir /local-scratch/nigam/projects/clinical_llm/data/mednli/ \
+    --dataset_splits test \
+    # Path to locally downloaded HuggingFace dataloader
+    --dataloader /local-scratch/nigam/projects/clinical_llm/dataloaders/mednli/mednli.py
+```
+
 ## Todos
 
 - [ ] Combine Manifest command with `main.py` command into a single command
