@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from typing import List, Optional
-from base import Prompt, TaskType, Task
+from manitest import Prompt, TaskType, Task
 
 ####################################
 # Prompt definitions
@@ -95,3 +95,4 @@ class MedNLI(Task):
 
 # Important -- needed so that the task can be imported by the eval harness!
 Export = MedNLI
+    

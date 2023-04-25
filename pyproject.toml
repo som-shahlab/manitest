@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "manitest"
+version = "0.1.0"
+description = "An LLM evaluation harness built with Manifest + EleutherAI"
+authors = ["Michael Wornow"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+"Homepage" = "https://github.com/som-shahlab/llm_eval_harness"
+"Bug Tracker" = "https://github.com/som-shahlab/llm_eval_harness/issues"

@@ -10,7 +10,9 @@ import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
 from datasets import DatasetDict
 from loguru import logger
-from utils import (
+from manitest.metrics import generation_metric
+from manitest.base import Task, TaskType, Prompt
+from manitest.utils import (
     logsumexp,
     manifest_model_config,
     manifest_tokenizer_config,
@@ -18,8 +20,6 @@ from utils import (
     manifest_generate_text,
     generation_multilabel_metric,
 )
-from metrics import generation_metric
-from base import Task, TaskType, Prompt
 
 ####################################
 # Master evaluation runner
