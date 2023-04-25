@@ -3,3 +3,4 @@ loguru==0.6.0
 datasets==2.10.1
 scikit-learn==1.2.2
 rouge_score==0.1.2
+protobuf==3.20
