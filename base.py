@@ -4,7 +4,7 @@ import importlib.util
 from abc import abstractmethod
 from enum import Enum
 from datasets import DatasetDict
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 from loguru import logger
 
 
@@ -14,13 +14,16 @@ class TaskType(Enum):
     MULTILABEL_CLASSIFICATION = 1
     GENERATION = 2
 
-
 class Prompt:
     name: str
+    instruction: Optional[str]
 
     @abstractmethod
-    def generate_prompt(self, example: dict) -> str:
-        """Takes a dataset example and returns a prompted version of that example."""
+    def generate_query(self, example: dict) -> str:
+        """Takes a dataset example and returns a version of that example formulated as a query
+            without its corresponding answer, e.g.
+                "Suppose X. Can we infer Y?"
+        """
         return ""
 
     @abstractmethod
@@ -28,9 +31,61 @@ class Prompt:
         """Gets the ground truth label for a dataset example"""
         return ""
 
+    @abstractmethod
+    def get_shots(self, example: dict, n_shots: int = 0) -> List[str]:
+        """Gets the few-shot context for a dataset example.
+            Returns a list of strings, where each string is a `shot`, and 
+            each shot contains both the query and the answer, e.g.
+                "Suppose X. Can we infer Y? Yes"
+        """
+        return []
+
+    def generate_prompt(self, example: dict, n_shots: int = 0, is_include_instruction: bool = False) -> str:
+        """Take a dataset example and returns a prompted version of that example. If `n_shots > 0`
+            then inject the examples in `get_shots()` as few-shot context prior to the `example` we're interested in
+
+        Args:
+            example (dict): The actual dataset example we want to prompt
+            n_shots (int, optional): Number of few-shot examples to include in context. Defaults to 0.
+            is_include_instruction (bool, optional): If TRUE, then prepend the prompt with `self.instruction`. Defaults to False.
+
+        Returns:
+            str: Prompt for the given example
+        """
+        prompt: str = ''
+        instruction_separator: str = '\n\n'
+        shot_separator: str = '\n'
+
+        # Add instruction prefix to prompt
+        if is_include_instruction:
+            prompt += self.instruction + instruction_separator
+        
+        # Add few shot context to prompt
+        if n_shots > 0:
+            shots: List[str] = self.get_shots(example, n_shots=n_shots)
+            for shot in shots:
+                prompt += shot + shot_separator
+        
+        # Add query of interset to prompt (i.e. what we're actually predicting)
+        prompt += self.generate_query(example)
+        return prompt
+
     def __repr__(self) -> str:
         return f"Prompt(name={self.name})"
 
+class PromptForClassification(Prompt):
+    """Prompt for classification tasks, i.e. TaskType == BINARY_CLASSIFICATION or MULTICLASS_CLASSIFICATION or MULTILABEL_CLASSIFICATION
+    """
+    verbalizer: Dict[str, List[str]] # [key] = class, [value] = list of strings (i.e. verbalizations) for that class
+
+    def __repr__(self) -> str:
+        return f"PromptForClassification(name={self.name})"
+
+class PromptForGeneration(Prompt):
+    """Prompt for generation tasks, i.e. TaskType == GENERATION
+    """
+    def __repr__(self) -> str:
+        return f"PromptForGeneration(name={self.name})"
 
 class Task:
     name: str
