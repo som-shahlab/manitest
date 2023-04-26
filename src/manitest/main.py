@@ -37,8 +37,8 @@ def main(args):
     logger.info(f"Will be saving outputs to: '{args.output_dir}'")
 
     # Manifest
-    manifest_domain = urlparse(args.manifest_url).netloc
-    os.environ["no_proxy"] = f"localhost, 127.0.0.1, {manifest_domain}"  # Needed on Nero
+    manifest_hostname = urlparse(args.manifest_url).hostname
+    os.environ["no_proxy"] = f"localhost, 127.0.0.1, {manifest_hostname}"  # Needed on Nero
     manifest = Manifest(
         client_name="huggingface",
         client_connection=args.manifest_url,
