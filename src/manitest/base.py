@@ -22,8 +22,8 @@ class Prompt:
     @abstractmethod
     def generate_query(self, example: dict) -> str:
         """Takes a dataset example and returns a version of that example formulated as a query
-            without its corresponding answer, e.g.
-                "Suppose X. Can we infer Y?"
+        without its corresponding answer, e.g.
+            "Suppose X. Can we infer Y?"
         """
         return ""
 
@@ -49,15 +49,20 @@ class Prompt:
         """
         return []
 
-    def generate_prompt(self, example: dict, n_shots: int = 0, instruction_separator: str = "\n\n", shot_separator: str = "\n", **kwargs) -> str:
-        """Take a dataset example and returns a prompted version of that example. If `n_shots > 0`
-            then inject the examples in `get_shots()` as few-shot context prior to the `example` we're interested in
+    def generate_prompt(
+        self, example: dict, n_shots: int = 0, instruction_separator: str = "\n\n", shot_separator: str = "\n", **kwargs
+    ) -> str:
+        """Take a dataset example and returns a prompted version of that example.
+            If `n_shots > 0` then inject the examples in `get_shots()` as few-shot
+            context prior to the `example` we're interested in.
 
         Args:
             example (dict): The actual dataset example we want to prompt
             n_shots (int): Number of few-shot examples to include in context. Defaults to 0.
-            instruction_separator (str): Text inserted after the content of `self.instruction` is preprended to the prompt (if `self.instruction is not None`). Defaults to \n\n.
-            shot_separator (str): Text inserted after each shot from `self.get_shots()` is added to the prompt (if `self.n_shots > 0`). Defaults to \n.
+            instruction_separator (str): Text inserted after the content of `self.instruction`
+                is preprended to the prompt (if `self.instruction is not None`). Defaults to \n\n.
+            shot_separator (str): Text inserted after each shot from `self.get_shots()` is added
+                to the prompt (if `self.n_shots > 0`). Defaults to \n.
             **kwargs (dict): Passed to `get_shots()`
 
         Returns:
@@ -82,21 +87,25 @@ class Prompt:
     def __repr__(self) -> str:
         return f"Prompt(name={self.name}, instruction={self.instruction})"
 
+
 class PromptForClassification(Prompt):
-    """Prompt for classification tasks, i.e. TaskType == BINARY_CLASSIFICATION or MULTICLASS_CLASSIFICATION or MULTILABEL_CLASSIFICATION"""
+    """Prompt for classification tasks, i.e.
+    TaskType in [BINARY_CLASSIFICATION, MULTICLASS_CLASSIFICATION, MULTILABEL_CLASSIFICATION]
+    """
 
     @property
     @abstractmethod
     def verbalizer(self) -> Dict[str, List[str]]:
-        """Return dict where [key] = class, [value] = list of strings (i.e. verbalizations) that, if output by the LLM, are mapped to that class.
+        """Return dict where [key] = class, [value] = list of strings (i.e. verbalizations) that,
+        if output by the LLM, are mapped to that class.
 
-            Example:
-            ```
-                return {
-                    'entailment' : ['yes', 'true',],
-                    'not entailment' : ['no', 'false',],
-                }
-            ```
+        Example:
+        ```
+            return {
+                'entailment' : ['yes', 'true',],
+                'not entailment' : ['no', 'false',],
+            }
+        ```
         """
         return {}
 

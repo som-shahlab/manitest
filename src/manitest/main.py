@@ -64,7 +64,7 @@ def main(args):
 
     # Get dataset for in-context shots
     in_context_shot_dataset: DatasetDict = DatasetDict({"train": dataset["train"]})
-    
+
     # Run evaluations
     run_eval(
         manifest,
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         help="For nucleus sampling",
         default=0.9,
     )
-    
+
     # In-context few shot (optional)
     parser.add_argument(
         "--n_shots",
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         help="Random seed (for sampling shots)",
         default=0,
     )
-    
+
     args = parser.parse_args()
     if not (args.manifest_url.startswith("http://") or args.manifest_url.startswith("https://")):
         raise ValueError(

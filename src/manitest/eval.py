@@ -33,7 +33,7 @@ def run_eval(
     output_dir: str,
     batch_size: int = 10,
     seed: int = 0,
-    n_shots: int = 0, 
+    n_shots: int = 0,
     in_context_shot_dataset: Optional[DatasetDict] = None,
     *args,
     **kwargs,
@@ -160,7 +160,9 @@ def run_classification(
             # For each example in the batch...
             sequences: List[Dict] = []
             for example_idx, example in enumerate(batch):
-                prompt_text: str = prompt.generate_prompt(example, n_shots=n_shots, seed=seed, in_context_shot_dataset=in_context_shot_dataset)
+                prompt_text: str = prompt.generate_prompt(
+                    example, n_shots=n_shots, seed=seed, in_context_shot_dataset=in_context_shot_dataset
+                )
                 true_label: str = prompt.get_label(example)
                 example_id: int = batch_idx * actual_batch_size + example_idx
                 # For each class label `pred_label`...
@@ -244,11 +246,12 @@ def run_generation(
 
             # Get prompts + true labels for each example in this batch
             prompts: List[str] = [
-                prompt.generate_prompt(example, n_shots=n_shots, seed=seed, in_context_shot_dataset=in_context_shot_dataset) for example in batch
+                prompt.generate_prompt(
+                    example, n_shots=n_shots, seed=seed, in_context_shot_dataset=in_context_shot_dataset
+                )
+                for example in batch
             ]
-            true_labels: List[str] = [
-                prompt.generate_label(example) for example in batch
-            ]
+            true_labels: List[str] = [prompt.generate_label(example) for example in batch]
             generations: List[str] = [
                 x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
             ]
