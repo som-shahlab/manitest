@@ -14,6 +14,7 @@ class TaskType(Enum):
     MULTILABEL_CLASSIFICATION = 1
     GENERATION = 2
 
+
 class Prompt:
     name: str
     instruction: Optional[str]
@@ -21,8 +22,8 @@ class Prompt:
     @abstractmethod
     def generate_query(self, example: dict) -> str:
         """Takes a dataset example and returns a version of that example formulated as a query
-            without its corresponding answer, e.g.
-                "Suppose X. Can we infer Y?"
+        without its corresponding answer, e.g.
+            "Suppose X. Can we infer Y?"
         """
         return ""
 
@@ -34,9 +35,9 @@ class Prompt:
     @abstractmethod
     def get_shots(self, example: dict, n_shots: int = 0) -> List[str]:
         """Gets the few-shot context for a dataset example.
-            Returns a list of strings, where each string is a `shot`, and 
-            each shot contains both the query and the answer, e.g.
-                "Suppose X. Can we infer Y? Yes"
+        Returns a list of strings, where each string is a `shot`, and
+        each shot contains both the query and the answer, e.g.
+            "Suppose X. Can we infer Y? Yes"
         """
         return []
 
@@ -52,20 +53,20 @@ class Prompt:
         Returns:
             str: Prompt for the given example
         """
-        prompt: str = ''
-        instruction_separator: str = '\n\n'
-        shot_separator: str = '\n'
+        prompt: str = ""
+        instruction_separator: str = "\n\n"
+        shot_separator: str = "\n"
 
         # Add instruction prefix to prompt
         if is_include_instruction:
             prompt += self.instruction + instruction_separator
-        
+
         # Add few shot context to prompt
         if n_shots > 0:
             shots: List[str] = self.get_shots(example, n_shots=n_shots)
             for shot in shots:
                 prompt += shot + shot_separator
-        
+
         # Add query of interset to prompt (i.e. what we're actually predicting)
         prompt += self.generate_query(example)
         return prompt
@@ -73,19 +74,22 @@ class Prompt:
     def __repr__(self) -> str:
         return f"Prompt(name={self.name})"
 
+
 class PromptForClassification(Prompt):
-    """Prompt for classification tasks, i.e. TaskType == BINARY_CLASSIFICATION or MULTICLASS_CLASSIFICATION or MULTILABEL_CLASSIFICATION
-    """
-    verbalizer: Dict[str, List[str]] # [key] = class, [value] = list of strings (i.e. verbalizations) for that class
+    """Prompt for classification tasks, i.e. TaskType == BINARY_CLASSIFICATION or MULTICLASS_CLASSIFICATION or MULTILABEL_CLASSIFICATION"""
+
+    verbalizer: Dict[str, List[str]]  # [key] = class, [value] = list of strings (i.e. verbalizations) for that class
 
     def __repr__(self) -> str:
         return f"PromptForClassification(name={self.name})"
 
+
 class PromptForGeneration(Prompt):
-    """Prompt for generation tasks, i.e. TaskType == GENERATION
-    """
+    """Prompt for generation tasks, i.e. TaskType == GENERATION"""
+
     def __repr__(self) -> str:
         return f"PromptForGeneration(name={self.name})"
+
 
 class Task:
     name: str
