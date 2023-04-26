@@ -277,7 +277,7 @@ def run_multilabel_classification(
             generations: List[str] = [
                 x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
             ]
-            for (prompt, generation, y) in zip(prompts, generations, ys):
+            for prompt, generation, y in zip(prompts, generations, ys):
                 labels_prompts_outputs.append((prompt, generation, *y))
         results[split] = np.array(labels_prompts_outputs)
 
