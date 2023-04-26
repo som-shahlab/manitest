@@ -67,6 +67,7 @@ def main(args):
         args.output_dir,
         batch_size=args.batch_size,
         max_new_tokens=args.max_new_tokens,
+        n_shots=args.n_shots,
     )
 
     logger.info("DONE!")
@@ -173,6 +174,12 @@ if __name__ == "__main__":
         "--top_p",
         type=float,
         help="For nucleus sampling",
+        default=0.9,
+    )
+    parser.add_argument(
+        "--n_shots",
+        type=int,
+        help="Number of shots for evaluation",
         default=0.9,
     )
     args = parser.parse_args()

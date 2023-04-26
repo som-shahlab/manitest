@@ -40,7 +40,7 @@ class Prompt:
         """
         return []
 
-    def generate_prompt(self, example: dict, n_shots: int = 0, is_include_instruction: bool = False) -> str:
+    def generate_prompt(self, example: dict, n_shots: int = 0) -> str:
         """Take a dataset example and returns a prompted version of that example. If `n_shots > 0`
             then inject the examples in `get_shots()` as few-shot context prior to the `example` we're interested in
 
@@ -57,8 +57,7 @@ class Prompt:
         shot_separator: str = '\n'
 
         # Add instruction prefix to prompt
-        if is_include_instruction:
-            prompt += self.instruction + instruction_separator
+        prompt += self.instruction + instruction_separator
         
         # Add few shot context to prompt
         if n_shots > 0:
