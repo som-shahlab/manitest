@@ -32,7 +32,7 @@ class Prompt:
         return ""
 
     @abstractmethod
-    def get_shots(self, example: dict, n_shots: int = 0) -> List[str]:
+    def get_shots(self, train_dataset: DatasetDict, example: dict, n_shots: int = 0, seed: int = 0) -> List[str]:
         """Gets the few-shot context for a dataset example.
             Returns a list of strings, where each string is a `shot`, and 
             each shot contains both the query and the answer, e.g.
@@ -40,7 +40,7 @@ class Prompt:
         """
         return []
 
-    def generate_prompt(self, example: dict, n_shots: int = 0) -> str:
+    def generate_prompt(self, train_dataset: DatasetDict, example: dict, n_shots: int = 0, seed: int = 0) -> str:
         """Take a dataset example and returns a prompted version of that example. If `n_shots > 0`
             then inject the examples in `get_shots()` as few-shot context prior to the `example` we're interested in
 
@@ -59,7 +59,7 @@ class Prompt:
         
         # Add few shot context to prompt
         if n_shots > 0:
-            shots: List[str] = self.get_shots(example, n_shots=n_shots)
+            shots: List[str] = self.get_shots(train_dataset, example, n_shots=n_shots, seed=seed)
             for shot in shots:
                 prompt += shot + shot_separator
         

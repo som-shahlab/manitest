@@ -56,6 +56,7 @@ def main(args):
         raise ValueError(
             f"Error parsing `--dataset_splits`. It should be a comma-separated list, but got: {args.dataset_splits}"
         )
+    train_dataset: DatasetDict = DatasetDict({"train": dataset["train"]})
     dataset: DatasetDict = DatasetDict({split: dataset[split] for split in splits})
     logger.info(f"Evaluating on dataset splits: {splits}")
 
@@ -63,11 +64,13 @@ def main(args):
     run_eval(
         manifest,
         dataset,
+        train_dataset,
         task,
         args.output_dir,
         batch_size=args.batch_size,
         max_new_tokens=args.max_new_tokens,
         n_shots=args.n_shots,
+        seed=args.seed
     )
 
     logger.info("DONE!")
@@ -180,6 +183,12 @@ if __name__ == "__main__":
         "--n_shots",
         type=int,
         help="Number of shots for evaluation",
+        default=0,
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Random Seed",
         default=0,
     )
     args = parser.parse_args()
