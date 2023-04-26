@@ -180,7 +180,7 @@ if __name__ == "__main__":
         "--n_shots",
         type=int,
         help="Number of shots for evaluation",
-        default=0.9,
+        default=0,
     )
     args = parser.parse_args()
 

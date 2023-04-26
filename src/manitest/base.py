@@ -47,14 +47,12 @@ class Prompt:
         Args:
             example (dict): The actual dataset example we want to prompt
             n_shots (int, optional): Number of few-shot examples to include in context. Defaults to 0.
-            is_include_instruction (bool, optional): If TRUE, then prepend the prompt with `self.instruction`. Defaults to False.
-
         Returns:
             str: Prompt for the given example
         """
         prompt: str = ''
         instruction_separator: str = '\n\n'
-        shot_separator: str = '\n'
+        shot_separator: str = '\n\n'
 
         # Add instruction prefix to prompt
         prompt += self.instruction + instruction_separator
