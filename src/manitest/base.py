@@ -22,47 +22,56 @@ class Prompt:
     @abstractmethod
     def generate_query(self, example: dict) -> str:
         """Takes a dataset example and returns a version of that example formulated as a query
-        without its corresponding answer, e.g.
-            "Suppose X. Can we infer Y?"
+            without its corresponding answer, e.g.
+                "Suppose X. Can we infer Y?"
         """
         return ""
 
     @abstractmethod
     def get_label(self, example: dict) -> str:
-        """Gets the ground truth label for a dataset example"""
+        """Get the ground truth label for this dataset example"""
         return ""
 
     @abstractmethod
-    def get_shots(self, train_dataset: DatasetDict, example: dict, n_shots: int = 0, seed: int = 0) -> List[str]:
-        """Gets the few-shot context for a dataset example.
-        Returns a list of strings, where each string is a `shot`, and
-        each shot contains both the query and the answer, e.g.
-            "Suppose X. Can we infer Y? Yes"
+    def get_shots(self, example: dict, n_shots: int = 0, **kwargs) -> List[str]:
+        """Get the few-shot context for a dataset example.
+            Returns a list of strings, where each string is a `shot`, and
+            each shot contains both the query and the answer, e.g.
+                "Suppose X. Can we infer Y? Yes"
+
+        Args:
+            example (dict): The actual dataset example we are querying the model to answer
+            n_shots (int, optional): Number of examples to include in context. Defaults to 0.
+            kwargs (dict): Anything else you want to pass to this function
+
+        Returns:
+            List[str]: List of examples (i.e. 'shots') that will be injected into the prompt.
         """
         return []
 
-    def generate_prompt(self, train_dataset: DatasetDict, example: dict, n_shots: int = 0, seed: int = 0) -> str:
+    def generate_prompt(self, example: dict, n_shots: int = 0, instruction_separator: str = "\n\n", shot_separator: str = "\n", **kwargs) -> str:
         """Take a dataset example and returns a prompted version of that example. If `n_shots > 0`
             then inject the examples in `get_shots()` as few-shot context prior to the `example` we're interested in
 
         Args:
             example (dict): The actual dataset example we want to prompt
-            n_shots (int, optional): Number of few-shot examples to include in context. Defaults to 0.
+            n_shots (int): Number of few-shot examples to include in context. Defaults to 0.
+            instruction_separator (str): Text inserted after the content of `self.instruction` is preprended to the prompt (if `self.instruction is not None`). Defaults to \n\n.
+            shot_separator (str): Text inserted after each shot from `self.get_shots()` is added to the prompt (if `self.n_shots > 0`). Defaults to \n.
+            **kwargs (dict): Passed to `get_shots()`
+
         Returns:
             str: Prompt for the given example
         """
         prompt: str = ""
-        instruction_separator: str = "\n\n"
-        shot_separator: str = "\n"
 
         # Add instruction prefix to prompt
-        is_include_instruction: bool = self.instruction is not None
-        if is_include_instruction:
+        if self.instruction is not None:
             prompt += self.instruction + instruction_separator
 
         # Add few shot context to prompt
         if n_shots > 0:
-            shots: List[str] = self.get_shots(train_dataset, example, n_shots=n_shots, seed=seed)
+            shots: List[str] = self.get_shots(example, n_shots=n_shots, **kwargs)
             for shot in shots:
                 prompt += shot + shot_separator
 
@@ -71,13 +80,25 @@ class Prompt:
         return prompt
 
     def __repr__(self) -> str:
-        return f"Prompt(name={self.name})"
-
+        return f"Prompt(name={self.name}, instruction={self.instruction})"
 
 class PromptForClassification(Prompt):
     """Prompt for classification tasks, i.e. TaskType == BINARY_CLASSIFICATION or MULTICLASS_CLASSIFICATION or MULTILABEL_CLASSIFICATION"""
 
-    verbalizer: Dict[str, List[str]]  # [key] = class, [value] = list of strings (i.e. verbalizations) for that class
+    @property
+    @abstractmethod
+    def verbalizer(self) -> Dict[str, List[str]]:
+        """Return dict where [key] = class, [value] = list of strings (i.e. verbalizations) that, if output by the LLM, are mapped to that class.
+
+            Example:
+            ```
+                return {
+                    'entailment' : ['yes', 'true',],
+                    'not entailment' : ['no', 'false',],
+                }
+            ```
+        """
+        return {}
 
     def __repr__(self) -> str:
         return f"PromptForClassification(name={self.name})"

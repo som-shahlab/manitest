@@ -51,7 +51,7 @@ def main(args):
         print(str(e))
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
-    # Determine which dataset splits to evaluate
+    # Get dataset splits that we evaluate model on
     try:
         splits = args.dataset_splits.split(",")
     except Exception as e:
@@ -59,21 +59,23 @@ def main(args):
         raise ValueError(
             f"Error parsing `--dataset_splits`. It should be a comma-separated list, but got: {args.dataset_splits}"
         )
-    train_dataset: DatasetDict = DatasetDict({"train": dataset["train"]})
     dataset: DatasetDict = DatasetDict({split: dataset[split] for split in splits})
     logger.info(f"Evaluating on dataset splits: {splits}")
 
+    # Get dataset for in-context shots
+    in_context_shot_dataset: DatasetDict = DatasetDict({"train": dataset["train"]})
+    
     # Run evaluations
     run_eval(
         manifest,
         dataset,
-        train_dataset,
         task,
         args.output_dir,
         batch_size=args.batch_size,
         max_new_tokens=args.max_new_tokens,
+        seed=args.seed,
         n_shots=args.n_shots,
-        seed=args.seed
+        in_context_shot_dataset=in_context_shot_dataset,
     )
 
     logger.info("DONE!")
@@ -182,20 +184,22 @@ if __name__ == "__main__":
         help="For nucleus sampling",
         default=0.9,
     )
+    
+    # In-context few shot (optional)
     parser.add_argument(
         "--n_shots",
         type=int,
-        help="Number of shots for evaluation",
+        help="Number of examples to insert into prompt before your query as additional in-context examples",
         default=0,
     )
     parser.add_argument(
         "--seed",
         type=int,
-        help="Random Seed",
+        help="Random seed (for sampling shots)",
         default=0,
     )
+    
     args = parser.parse_args()
-
     if not (args.manifest_url.startswith("http://") or args.manifest_url.startswith("https://")):
         raise ValueError(
             "Please include 'http://' or 'https://' in your manifest_url."

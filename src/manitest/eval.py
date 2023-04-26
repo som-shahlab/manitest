@@ -3,7 +3,7 @@ Helper functions for classification tasks
 """
 import os
 import json
-from typing import List, Dict, Tuple, Union, Any
+from typing import List, Dict, Tuple, Union, Any, Optional
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -29,12 +29,12 @@ from manitest.utils import (
 def run_eval(
     manifest,
     dataset: DatasetDict,
-    train_dataset: DatasetDict,
     task: Task,
     output_dir: str,
     batch_size: int = 10,
-    n_shots: int = 0, 
     seed: int = 0,
+    n_shots: int = 0, 
+    in_context_shot_dataset: Optional[DatasetDict] = None,
     *args,
     **kwargs,
 ) -> Dict[str, Dict[str, Union[pd.DataFrame, Dict]]]:
@@ -79,11 +79,11 @@ def run_eval(
         results = eval_func(
             manifest,
             dataset,
-            train_dataset,
             prompt,
             output_dir,
             batch_size=batch_size,
             n_shots=n_shots,
+            in_context_shot_dataset=in_context_shot_dataset,
             *args,
             **kwargs,
         )
@@ -118,12 +118,12 @@ def run_eval(
 def run_classification(
     manifest,
     dataset: DatasetDict,
-    train_dataset: DatasetDict,
     prompt: Prompt,
     output_dir: str,
     batch_size: int = 10,
-    n_shots: int = 0,
     seed: int = 0,
+    n_shots: int = 0,
+    in_context_shot_dataset: Optional[DatasetDict] = None,
     **kwargs,
 ) -> Dict[str, pd.DataFrame]:
     """Run a binary/multi-class classification task by first
@@ -160,7 +160,7 @@ def run_classification(
             # For each example in the batch...
             sequences: List[Dict] = []
             for example_idx, example in enumerate(batch):
-                prompt_text: str = prompt.generate_prompt(train_dataset, example, n_shots=n_shots, seed=seed)
+                prompt_text: str = prompt.generate_prompt(example, n_shots=n_shots, seed=seed, in_context_shot_dataset=in_context_shot_dataset)
                 true_label: str = prompt.get_label(example)
                 example_id: int = batch_idx * actual_batch_size + example_idx
                 # For each class label `pred_label`...
@@ -216,12 +216,12 @@ def run_classification(
 def run_generation(
     manifest,
     dataset: DatasetDict,
-    train_dataset: DatasetDict,
     prompt: Prompt,
     output_dir: str,
     batch_size: int = 10,
     max_new_tokens: int = 100,
     n_shots: int = 0,
+    in_context_shot_dataset: Optional[DatasetDict] = None,
     seed: int = 0,
     **kwargs,
 ):
@@ -243,8 +243,12 @@ def run_generation(
             batch: List[Tuple] = [dict(zip(batch_as_dict, t)) for t in zip(*batch_as_dict.values())]
 
             # Get prompts + true labels for each example in this batch
-            prompts: List[str] = [prompt.generate_prompt(train_dataset, example, n_shots=n_shots, seed=seed) for example in batch]
-            true_labels: List[str] = [prompt.generate_label(example) for example in batch]
+            prompts: List[str] = [
+                prompt.generate_prompt(example, n_shots=n_shots, seed=seed, in_context_shot_dataset=in_context_shot_dataset) for example in batch
+            ]
+            true_labels: List[str] = [
+                prompt.generate_label(example) for example in batch
+            ]
             generations: List[str] = [
                 x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
             ]
@@ -262,6 +266,9 @@ def run_multilabel_classification(
     output_dir: str,
     batch_size: int = 10,
     max_new_tokens: int = 100,
+    n_shots: int = 0,
+    in_context_shot_dataset: Optional[DatasetDict] = None,
+    seed: int = 0,
     **kwargs,
 ):
     # TODO - update
