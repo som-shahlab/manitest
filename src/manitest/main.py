@@ -21,6 +21,7 @@ import requests
 from loguru import logger
 from manifest import Manifest
 from datasets import DatasetDict
+from urllib.parse import urlparse
 
 from manitest.eval import run_eval
 from manitest.base import load_task
@@ -36,7 +37,8 @@ def main(args):
     logger.info(f"Will be saving outputs to: '{args.output_dir}'")
 
     # Manifest
-    os.environ["no_proxy"] = "localhost, 127.0.0.1"  # Needed on Nero
+    manifest_domain = urlparse(args.manifest_url).netloc
+    os.environ["no_proxy"] = f"localhost, 127.0.0.1, {manifest_domain}"  # Needed on Nero
     manifest = Manifest(
         client_name="huggingface",
         client_connection=args.manifest_url,
