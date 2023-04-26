@@ -36,7 +36,7 @@ python3 -m manifest.api.app \
 
 # Run evaluation harness on your desired task
 # Note: To run the MedNLI task, you must first download the dataset from: https://physionet.org/content/mednli/1.0.0/
-python3 main.py \
+python3 src/manitest/main.py \
     --manifest_url http://127.0.0.1:5000 \
     --path_to_task tests/mednli/mednli.py \
     --output_dir ./ignore \

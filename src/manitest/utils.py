@@ -1,7 +1,7 @@
 import re
 import requests
-from typing import List, Dict, Tuple
 import numpy as np
+from typing import List, Dict, Tuple
 from sklearn.metrics import classification_report
 from manifest import Manifest
 

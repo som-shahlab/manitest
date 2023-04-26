@@ -1,5 +1,6 @@
-datasets==2.10.1
+manifest-ml[api] @ git+https://github.com/som-shahlab/manifest.git@eval-michael#egg=manifest-ml[api]
 loguru==0.6.0
-manifest-ml[api] @ git+https://github.com/som-shahlab/manifest.git#egg=manifest-ml[api]
-rouge_score==0.1.2
+datasets==2.10.1
 scikit-learn==1.2.2
+rouge_score==0.1.2
+protobuf==3.20
