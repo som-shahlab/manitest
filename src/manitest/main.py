@@ -115,6 +115,7 @@ if __name__ == "__main__":
             "Passed to huggingface's load_dataset() as `dataloader` kwarg."
         ),
         required=False,
+        default=None,
     )
     parser.add_argument(
         "--data_dir",

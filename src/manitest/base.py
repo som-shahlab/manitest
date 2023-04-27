@@ -157,6 +157,19 @@ class Task:
 
 
 def load_python_module_from_python_file(path_to_python_file: str):
+    """Load a python module from a python file
+        Loads from path if path is passed.
+        Loads from`tasks/` directory provided with ManiTest if path is not passed.
+
+    Args:
+        path_to_python_file (str): Either a path or a `manitest.task.task_name`
+
+    Returns:
+        _type_: Python module
+    """
+    # If `manitest.tasks.` is passed, load from `manitest/tasks/` directory
+    if not os.path.exists(path_to_python_file) and path_to_python_file.startswith("manitest.tasks."):
+        path_to_python_file = os.path.join(os.path.dirname(__file__), 'tasks/', path_to_python_file.split('.')[-1] + ".py")
     path_to_python_file = os.path.abspath(path_to_python_file)
     if (
         not os.path.exists(path_to_python_file)

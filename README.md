@@ -12,19 +12,12 @@ _Note: We use our own fork of Manifest, which we hope to merge back into the mai
 ## Installation
 
 ```bash
-# Download repo
-git clone https://github.com/som-shahlab/llm_eval_harness
-cd llm_eval_harness
-
-# Create virtual environment + install dependencies
-conda create --name manitest_env python=3.10 -y
-conda activate manitest_env
-pip3 install -r requirements.txt
+pip3 install manitest "git+https://github.com/som-shahlab/manifest.git@eval-michael#egg=manifest-ml[api]"
 ```
 
 ## Quickstart
 
-To run the eval harness, you must first have a Manifest server running in the background with your desired model.
+To run the eval harness, you must first have a Manifest server running in the background with your desired model. You can then run the eval harness on your desired task. ManiTest comes with a couple tasks pre-loaded in the `manitest.tasks` module, such as `manitest.tasks.mednli` and `manitest.tasks.scitail`.
 
 ```bash
 # Run Manifest server with your desired model
@@ -32,21 +25,21 @@ python3 -m manifest.api.app \
     --model_type huggingface \
     --model_name_or_path gpt2 \
     --model_generation_type text-generation \
-    --port 5000 &
+    --port 5001 &
 
-# Run evaluation harness on your desired task
+# Run ManiTest evaluation harness on your desired task
 # Note: To run the MedNLI task, you must first download the dataset from: https://physionet.org/content/mednli/1.0.0/
-python3 src/manitest/main.py \
-    --manifest_url http://127.0.0.1:5000 \
-    --path_to_task tests/mednli/mednli.py \
+python3 -m manitest.main  \
+    --manifest_url http://127.0.0.1:5001 \
+    --path_to_task manitest.tasks.mednli \
     --output_dir ./ignore \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
     --dataset_splits test
 
 # Test a few-shot prompting setup
 python3 src/manitest/main.py \
-    --manifest_url http://127.0.0.1:5000 \
-    --path_to_task tests/mednli/mednli_fewshot.py \
+    --manifest_url http://127.0.0.1:5001 \
+    --path_to_task manitest.tasks.mednli_fewshot \
     --output_dir ./ignore \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
     --dataset_splits test \
@@ -111,6 +104,21 @@ python3 main.py \
     --manifest_url http://localhost:5000 \
     --path_to_task path/to/your_task.py \
     --output_dir ./ignore
+```
+
+## Development
+
+Installation:
+
+```bash
+# Download repo
+git clone https://github.com/som-shahlab/manitest
+cd manitest
+
+# Create virtual environment + install dependencies
+conda create --name manitest_env python=3.10 -y
+conda activate manitest_env
+poetry install
 ```
 
 ## Special setup instructions for computers without Internet access
