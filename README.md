@@ -17,8 +17,8 @@ git clone https://github.com/som-shahlab/llm_eval_harness
 cd llm_eval_harness
 
 # Create virtual environment + install dependencies
-conda create --name llm_eval_harness_env python=3.10 -y
-conda activate llm_eval_harness_env
+conda create --name manitest_env python=3.10 -y
+conda activate manitest_env
 pip3 install -r requirements.txt
 ```
 
