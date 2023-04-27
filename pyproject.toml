@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "manitest"
-version = "0.1.0"
+version = "0.1.1"
 description = "An LLM evaluation harness built with Manifest + EleutherAI"
 authors = ["Michael Wornow"]
 license = "MIT"
