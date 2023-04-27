@@ -7,6 +7,7 @@ import random
 # Prompt definitions
 ####################################
 
+
 class Prompt1(PromptForClassification):
     name: str = "suppose"
     verbalizer: dict = {
@@ -17,9 +18,9 @@ class Prompt1(PromptForClassification):
 
     def get_shots(self, example: dict, n_shots: int = 0, **kwargs) -> List[str]:
         # Randomly select `n_shots` examples from the `in_context_shot_dataset` dataset
-        dataset = kwargs.get('in_context_shot_dataset')
+        dataset = kwargs.get("in_context_shot_dataset")
         shots = dataset.select(random.choices(range(len(dataset)), k=n_shots))
-        return [ self.generate_query(shot) + ' ' + self.get_label(shot) for shot in shots ]
+        return [self.generate_query(shot) + " " + self.get_label(shot) for shot in shots]
 
     def get_label(self, example: dict):
         """Maps attributes of a dataset example to a class (i.e. a [key] in `verbalizer`)"""
