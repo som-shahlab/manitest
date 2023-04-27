@@ -1,13 +1,13 @@
 from datasets import load_dataset
 from typing import List, Optional
-from manitest import Prompt, TaskType, Task
+from manitest import PromptForClassification, TaskType, Task
 
 ####################################
 # Prompt definitions
 ####################################
 
 
-class ScitailPrompt(Prompt):
+class ScitailPrompt(PromptForClassification):
     verbalizer: dict = {
         "entailment": ["yes"],
         "not entailment": ["no"],
@@ -30,14 +30,14 @@ class Prompt1(ScitailPrompt):
         "not entailment": ["neutral"],
     }
 
-    def generate_prompt(self, example: dict) -> str:
+    def generate_prompt(self, example: dict, **kwargs) -> str:
         return f"Suppose {example['premise']} Can we infer that {example['hypothesis']}?"
 
 
 class Prompt2(ScitailPrompt):
     name: str = "two_sentences"
 
-    def generate_prompt(self, example: dict) -> str:
+    def generate_prompt(self, example: dict, **kwargs) -> str:
         return (
             f"Sentence 1: {example['premise']}\n\nSentence 2: {example['hypothesis']}\n\n"
             "Question: Does Sentence 1 entail Sentence 2?  yes or no"
@@ -47,7 +47,7 @@ class Prompt2(ScitailPrompt):
 class Prompt3(ScitailPrompt):
     name: str = "does_it_follow"
 
-    def generate_prompt(self, example: dict) -> str:
+    def generate_prompt(self, example: dict, **kwargs) -> str:
         return f"Given that {example['premise']} Does it follow that {example['hypothesis']}  yes or no"
 
 
@@ -58,14 +58,14 @@ class Prompt4(ScitailPrompt):
         "not entailment": ["false"],
     }
 
-    def generate_prompt(self, example: dict) -> str:
+    def generate_prompt(self, example: dict, **kwargs) -> str:
         return f"{example['premise']} Therefore, we are licensed to say that {example['hypothesis']}  true or false"
 
 
 class Prompt5(ScitailPrompt):
     name: str = "does_passage_support_claim"
 
-    def generate_prompt(self, example: dict) -> str:
+    def generate_prompt(self, example: dict, **kwargs) -> str:
         return f"{example['premise']} Does the previous passage support the claim that {example['hypothesis']}?"
 
 
@@ -79,7 +79,7 @@ class Scitail(Task):
     task_type: TaskType = TaskType.BINARY_CLASSIFICATION
 
     def __init__(self):
-        self.prompts: List[Prompt] = [
+        self.prompts: List[PromptForClassification] = [
             Prompt1(),
             Prompt2(),
             Prompt3(),

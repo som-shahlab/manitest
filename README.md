@@ -42,6 +42,15 @@ python3 src/manitest/main.py \
     --output_dir ./ignore \
     --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
     --dataset_splits test
+
+# Test a few-shot prompting setup
+python3 src/manitest/main.py \
+    --manifest_url http://127.0.0.1:5000 \
+    --path_to_task tests/mednli/mednli_fewshot.py \
+    --output_dir ./ignore \
+    --data_dir /Users/mwornow/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
+    --dataset_splits test \
+    --n_shots 3
 ```
 
 ## Tips
@@ -138,6 +147,7 @@ python3 main.py \
 - [ ] Add tests
 - [ ] Documentation
 - [ ] Multi-label classification task support
+- [X] Few-shot in-context examples
 - [X] Multi-class classification task support
 - [X] Text generation task support
 - [X] Test case with mednli replacement classification task

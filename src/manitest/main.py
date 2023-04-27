@@ -20,7 +20,8 @@ import argparse
 import requests
 from loguru import logger
 from manifest import Manifest
-from datasets import DatasetDict
+from datasets import DatasetDict, Dataset
+from urllib.parse import urlparse
 
 from manitest.eval import run_eval
 from manitest.base import load_task
@@ -36,7 +37,8 @@ def main(args):
     logger.info(f"Will be saving outputs to: '{args.output_dir}'")
 
     # Manifest
-    os.environ["no_proxy"] = "localhost, 127.0.0.1"  # Needed on Nero
+    manifest_hostname = urlparse(args.manifest_url).hostname
+    os.environ["no_proxy"] = f"localhost, 127.0.0.1, {manifest_hostname}"  # Needed on Nero
     manifest = Manifest(
         client_name="huggingface",
         client_connection=args.manifest_url,
@@ -49,7 +51,10 @@ def main(args):
         print(str(e))
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
-    # Determine which dataset splits to evaluate
+    # Get dataset for in-context shots
+    in_context_shot_dataset: Dataset = dataset["train"]
+
+    # Get dataset splits that we evaluate model on
     try:
         splits = args.dataset_splits.split(",")
     except Exception as e:
@@ -68,6 +73,9 @@ def main(args):
         args.output_dir,
         batch_size=args.batch_size,
         max_new_tokens=args.max_new_tokens,
+        seed=args.seed,
+        n_shots=args.n_shots,
+        in_context_shot_dataset=in_context_shot_dataset,
     )
 
     logger.info("DONE!")
@@ -176,8 +184,22 @@ if __name__ == "__main__":
         help="For nucleus sampling",
         default=0.9,
     )
-    args = parser.parse_args()
 
+    # In-context few shot (optional)
+    parser.add_argument(
+        "--n_shots",
+        type=int,
+        help="Number of examples to insert into prompt before your query as additional in-context examples",
+        default=0,
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Random seed (for sampling shots)",
+        default=0,
+    )
+
+    args = parser.parse_args()
     if not (args.manifest_url.startswith("http://") or args.manifest_url.startswith("https://")):
         raise ValueError(
             "Please include 'http://' or 'https://' in your manifest_url."
