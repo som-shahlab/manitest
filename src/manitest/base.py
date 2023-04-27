@@ -7,6 +7,7 @@ from typing import List, Tuple, Optional, Dict
 from loguru import logger
 from abc import ABC, abstractmethod
 
+
 class TaskType(Enum):
     BINARY_CLASSIFICATION = 0
     MULTICLASS_CLASSIFICATION = 0
@@ -37,8 +38,8 @@ class Prompt(ABC):
     @abstractmethod
     def get_label(self, example: dict) -> str:
         """Get the ground truth label for this dataset example.
-            Given a query ("Suppose X. Can we infer Y?") it returns the 
-            class corresponding to this example ("entailment")
+        Given a query ("Suppose X. Can we infer Y?") it returns the
+        class corresponding to this example ("entailment")
         """
         return ""
 
@@ -59,9 +60,13 @@ class Prompt(ABC):
         return []
 
     def generate_prompt(
-        self, example: dict, n_shots: int = 0, 
-        instruction_separator: str = "\n\n", shot_separator: str = "\n", post_shot_separator: str = "\n",
-        **kwargs
+        self,
+        example: dict,
+        n_shots: int = 0,
+        instruction_separator: str = "\n\n",
+        shot_separator: str = "\n",
+        post_shot_separator: str = "\n",
+        **kwargs,
     ) -> str:
         """Take a dataset example and returns a prompted version of that example.
             If `n_shots > 0` then inject the examples in `get_shots()` as few-shot
@@ -84,7 +89,7 @@ class Prompt(ABC):
         prompt: str = ""
 
         # Add instruction prefix to prompt
-        if hasattr(self, 'instruction') and self.instruction is not None:
+        if hasattr(self, "instruction") and self.instruction is not None:
             prompt += self.instruction + instruction_separator
 
         # Add few shot context to prompt
