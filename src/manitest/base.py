@@ -169,18 +169,20 @@ def load_python_module_from_python_file(path_to_python_file: str):
     """
     # If `manitest.tasks.` is passed, load from `manitest/tasks/` directory
     if not os.path.exists(path_to_python_file) and path_to_python_file.startswith("manitest.tasks."):
-        path_to_python_file = os.path.join(os.path.dirname(__file__), 'tasks/', path_to_python_file.split('.')[-1] + ".py")
-    path_to_python_file = os.path.abspath(path_to_python_file)
-    if (
-        not os.path.exists(path_to_python_file)
-        or not os.path.isfile(path_to_python_file)
-        or not path_to_python_file.endswith(".py")
-    ):
-        raise ValueError(f"Python file @ path '{path_to_python_file}' does not exist")
-    spec = importlib.util.spec_from_file_location("module.name", path_to_python_file)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["module.name"] = module
-    spec.loader.exec_module(module)
+        logger.info(f"Loading module {path_to_python_file} from `manitest/tasks/` directory")
+        module = importlib.import_module(path_to_python_file)
+    else:
+        path_to_python_file = os.path.abspath(path_to_python_file)
+        if (
+            not os.path.exists(path_to_python_file)
+            or not os.path.isfile(path_to_python_file)
+            or not path_to_python_file.endswith(".py")
+        ):
+            raise ValueError(f"Python file @ path '{path_to_python_file}' does not exist")
+        spec = importlib.util.spec_from_file_location("module.name", path_to_python_file)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["module.name"] = module
+        spec.loader.exec_module(module)
     return module
 
 
