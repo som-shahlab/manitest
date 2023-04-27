@@ -20,7 +20,7 @@ import argparse
 import requests
 from loguru import logger
 from manifest import Manifest
-from datasets import DatasetDict
+from datasets import DatasetDict, Dataset
 from urllib.parse import urlparse
 
 from manitest.eval import run_eval
@@ -51,6 +51,9 @@ def main(args):
         print(str(e))
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
+    # Get dataset for in-context shots
+    in_context_shot_dataset: Dataset = dataset["train"]
+
     # Get dataset splits that we evaluate model on
     try:
         splits = args.dataset_splits.split(",")
@@ -61,9 +64,6 @@ def main(args):
         )
     dataset: DatasetDict = DatasetDict({split: dataset[split] for split in splits})
     logger.info(f"Evaluating on dataset splits: {splits}")
-
-    # Get dataset for in-context shots
-    in_context_shot_dataset: DatasetDict = DatasetDict({"train": dataset["train"]})
 
     # Run evaluations
     run_eval(
