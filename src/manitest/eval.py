@@ -96,9 +96,9 @@ def run_eval(
 
         # Save results / metrics
         for split in dataset.keys():
-            results[split].to_csv(os.path.join(output_dir, f"results_{split}_{prompt.name}.csv"), index=False)
+            results[split].to_csv(os.path.join(output_dir, f"results_{split}_task_{task.name}_prompt_{prompt.name}.csv"), index=False)
             json.dump(
-                metrics[split], open(os.path.join(output_dir, f"metrics_{split}_{prompt.name}.json"), "w"), indent=4
+                metrics[split], open(os.path.join(output_dir, f"metrics_{split}_task_{task.name}_prompt_{prompt.name}.json"), "w"), indent=4
             )
         logger.info(f"Prompt '{prompt.name}' metrics:\n{metrics}")
 
@@ -107,7 +107,7 @@ def run_eval(
 
     # Save metrics
     for split in dataset.keys():
-        json.dump(metrics_agg[split], open(os.path.join(output_dir, f"metrics_{split}.json"), "w"), indent=4)
+        json.dump(metrics_agg[split], open(os.path.join(output_dir, f"metrics_agg_{split}_{task.name}.json"), "w"), indent=4)
     logger.info(f"Aggregated metrics across ALL prompts:\n{metrics}")
 
 
@@ -328,6 +328,7 @@ def metric_generation(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
         metrics[split] = {
             "bleu": generation_metric(generations, true_labels, "sentence_bleu"),
             "rouge": generation_metric(generations, true_labels, "rouge"),
+            "meteor": generation_metric(generations, true_labels, "meteor"),
         }
     return metrics
 

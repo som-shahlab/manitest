@@ -74,5 +74,34 @@ def generation_metric(hypos, refs, metric: Optional[str] = "sentence_bleu"):
 
         return rouge(refs, hypos)
 
+    elif metric == "meteor":
+        import nltk
+        from nltk.translate import meteor_score
+        from nltk.tokenize import word_tokenize
+
+        try:
+            nltk_path = str(nltk.data.find("tokenizers/punkt"))
+            print(f"Using nltk from: {nltk_path}")
+        except LookupError:
+            nltk.download("punkt")
+
+        scores = []
+
+        for ref, hypo in zip(refs, hypos):
+            tokenized_hypo = word_tokenize(hypo)
+            tokenized_refs = [word_tokenize(r) for r in ref.split("\n")]
+
+            try:
+                sc = meteor_score.meteor_score(tokenized_refs, tokenized_hypo)
+            except ValueError:
+                print("Math domain error in Meteor, set to 0.0. Generated sentence: {}".format(hypo))
+                sc = 0.0
+
+            scores.append(sc)
+
+        score = sum(scores) / len(scores)
+        return score
+
+
     else:
         raise ValueError("'{}' is not a valid metric type.".format(metric))
