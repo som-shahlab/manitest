@@ -10,6 +10,7 @@ import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
 from datasets import DatasetDict
 from loguru import logger
+
 from manitest.metrics import generation_metric
 from manitest.base import Task, TaskType, Prompt
 from manitest.utils import (
@@ -251,7 +252,7 @@ def run_generation(
                 )
                 for example in batch
             ]
-            true_labels: List[str] = [prompt.generate_label(example) for example in batch]
+            true_labels: List[str] = [prompt.get_label(example) for example in batch]
             generations: List[str] = [
                 x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
             ]

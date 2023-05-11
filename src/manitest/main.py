@@ -23,8 +23,11 @@ from manifest import Manifest
 from datasets import DatasetDict, Dataset
 from urllib.parse import urlparse
 
+import sys
+
 from manitest.eval import run_eval
 from manitest.base import load_task
+
 
 
 def main(args):
