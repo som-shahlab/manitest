@@ -6,7 +6,7 @@ from manitest.base import Prompt, PromptForGeneration, TaskType, Task
 
 
 class Prompt1(PromptForGeneration):
-    name: str = "medparasimp"
+    name: str = "summarize"
     instruction: str = "Given a paragraph, summarize it."
 
     def get_label(self, example: dict):
