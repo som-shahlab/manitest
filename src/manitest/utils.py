@@ -31,7 +31,7 @@ def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple
     except Exception as e:
         print(str(e))
         raise RuntimeError(
-            "Blah No value returned from Manifest. This is probably a CUDA out-of-memory error. Try reducing the batch size."
+            "No value returned from Manifest. This is probably a CUDA out-of-memory error. Try reducing the batch size."
         )
     return scores
 
