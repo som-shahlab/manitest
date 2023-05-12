@@ -29,7 +29,6 @@ from manitest.eval import run_eval
 from manitest.base import load_task
 
 
-
 def main(args):
     # Load dataset + prompts for specific task
     dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir)

@@ -96,9 +96,19 @@ def run_eval(
 
         # Save results / metrics
         for split in dataset.keys():
-            results[split].to_csv(os.path.join(output_dir, f"results_{split}_task_{task.name}_prompt_{prompt.name}_shots_{n_shots}.csv"), index=False)
+            results[split].to_csv(
+                os.path.join(output_dir, f"results_{split}_task_{task.name}_prompt_{prompt.name}_shots_{n_shots}.csv"),
+                index=False,
+            )
             json.dump(
-                metrics[split], open(os.path.join(output_dir, f"metrics_{split}_task_{task.name}_prompt_{prompt.name}_shots_{n_shots}.json"), "w"), indent=4
+                metrics[split],
+                open(
+                    os.path.join(
+                        output_dir, f"metrics_{split}_task_{task.name}_prompt_{prompt.name}_shots_{n_shots}.json"
+                    ),
+                    "w",
+                ),
+                indent=4,
             )
         logger.info(f"Prompt '{prompt.name}' metrics:\n{metrics}")
 
@@ -107,7 +117,11 @@ def run_eval(
 
     # Save metrics
     for split in dataset.keys():
-        json.dump(metrics_agg[split], open(os.path.join(output_dir, f"metrics_agg_{split}_task_{task.name}_shots_{n_shots}.json"), "w"), indent=4)
+        json.dump(
+            metrics_agg[split],
+            open(os.path.join(output_dir, f"metrics_agg_{split}_task_{task.name}_shots_{n_shots}.json"), "w"),
+            indent=4,
+        )
     logger.info(f"Aggregated metrics across ALL prompts:\n{metrics}")
 
 

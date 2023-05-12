@@ -102,6 +102,5 @@ def generation_metric(hypos, refs, metric: Optional[str] = "sentence_bleu"):
         score = sum(scores) / len(scores)
         return score
 
-
     else:
         raise ValueError("'{}' is not a valid metric type.".format(metric))
