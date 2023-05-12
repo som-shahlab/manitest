@@ -30,7 +30,7 @@ class Prompt1(PromptForGeneration):
 ####################################
 
 class MedParaSimp(Task):
-    name: str = "medparasimp_eval"
+    name: str = "medparasimp"
     task_type: TaskType = TaskType.GENERATION
 
     def __init__(self):

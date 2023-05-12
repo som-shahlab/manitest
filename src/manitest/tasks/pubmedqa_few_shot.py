@@ -44,7 +44,7 @@ class Prompt1(PromptForClassification):
 
 
 class PubMedQAEval(Task):
-    name: str = "pubmedqa_eval"
+    name: str = "pubmedqa"
     task_type: TaskType = TaskType.BINARY_CLASSIFICATION
 
     def __init__(self):

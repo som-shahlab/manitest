@@ -42,7 +42,7 @@ class Prompt1(PromptForClassification):
 ####################################
 
 class MedNLIEval(Task):
-    name: str = "mednli_eval"
+    name: str = "mednli"
     task_type: TaskType = TaskType.BINARY_CLASSIFICATION
 
     def __init__(self):

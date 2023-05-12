@@ -43,7 +43,7 @@ class Prompt1(PromptForClassification):
 
 
 class MedQAEval(Task):
-    name: str = "medqa_eval"
+    name: str = "medqa"
     task_type: TaskType = TaskType.MULTICLASS_CLASSIFICATION
 
     def __init__(self):

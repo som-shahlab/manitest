@@ -30,7 +30,7 @@ class Prompt1(PromptForGeneration):
 ####################################
 
 class BioASQ(Task):
-    name: str = "bioasq_task_b_eval"
+    name: str = "bioasq_task_b"
     task_type: TaskType = TaskType.GENERATION
 
     def __init__(self):
