@@ -25,7 +25,8 @@ def manifest_tokenizer_config(manifest: Manifest) -> str:
 def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple[str, str]]) -> List[float]:
     try:
         results: Dict = requests.post(
-            manifest.client_pool.get_current_client().host + "/score_sequence_eleuther_lm_eval", json={"prompts_with_labels": prompts_with_labels}
+            manifest.client_pool.get_current_client().host + "/score_sequence_eleuther_lm_eval",
+            json={"prompts_with_labels": prompts_with_labels},
         ).json()
         scores = [(x["label_prob"]) for x in results]
     except Exception as e:
