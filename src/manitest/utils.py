@@ -13,19 +13,19 @@ from manifest import Manifest
 
 
 def manifest_model_config(manifest: Manifest) -> Dict:
-    model_config: Dict = requests.get(manifest.client.host + "/model_config").json()
+    model_config: Dict = requests.get(manifest.client_pool.get_current_client().host + "/model_config").json()
     return model_config
 
 
 def manifest_tokenizer_config(manifest: Manifest) -> str:
-    tokenizer_config: str = requests.get(manifest.client.host + "/tokenizer_config").text
+    tokenizer_config: str = requests.get(manifest.client_pool.get_current_client().host + "/tokenizer_config").text
     return tokenizer_config
 
 
 def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple[str, str]]) -> List[float]:
     try:
         results: Dict = requests.post(
-            manifest.client.host + "/score_sequence_eleuther_lm_eval", json={"prompts_with_labels": prompts_with_labels}
+            manifest.client_pool.get_current_client().host + "/score_sequence_eleuther_lm_eval", json={"prompts_with_labels": prompts_with_labels}
         ).json()
         scores = [(x["label_prob"]) for x in results]
     except Exception as e:
@@ -39,7 +39,7 @@ def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple
 def manifest_generate_text(manifest: Manifest, sequences: List[str], **kwargs) -> List[Tuple[str, float]]:
     try:
         results: Dict = requests.post(
-            manifest.client.host + "/completions", json={"prompt": sequences, **kwargs}
+            manifest.client_pool.get_current_client().host + "/completions", json={"prompt": sequences, **kwargs}
         ).json()
         generations = [(x["text"], x["logprob"]) for x in results["choices"]]
     except Exception as e:
