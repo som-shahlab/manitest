@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and
 #
 # * Ayush Singh (singhay)
@@ -48,7 +47,7 @@ from bigbiohub import kb_features
 from bigbiohub import BigBioConfig
 from bigbiohub import Tasks
 
-_LANGUAGES = ['English']
+_LANGUAGES = ["English"]
 _PUBMED = False
 _LOCAL = True
 _CITATION = """\
@@ -94,7 +93,7 @@ Using this reference standard, 22 systems were developed for concept extraction,
 
 _HOMEPAGE = "https://portal.dbmi.hms.harvard.edu/projects/n2c2-nlp/"
 
-_LICENSE = 'Data User Agreement'
+_LICENSE = "Data User Agreement"
 
 _SUPPORTED_TASKS = [Tasks.NAMED_ENTITY_RECOGNITION, Tasks.RELATION_EXTRACTION]
 
@@ -107,7 +106,6 @@ def _read_tar_gz(file_path: str, samples=None):
     if samples is None:
         samples = defaultdict(dict)
     with tarfile.open(file_path, "r:gz") as tf:
-
         for member in tf.getmembers():
             base, filename = os.path.split(member.name)
             _, ext = os.path.splitext(filename)
@@ -115,9 +113,7 @@ def _read_tar_gz(file_path: str, samples=None):
             sample_id = filename.split(".")[0]
 
             if ext in ["txt", "ast", "con", "rel"]:
-                samples[sample_id][f"{ext}_source"] = (
-                    os.path.basename(file_path) + "|" + member.name
-                )
+                samples[sample_id][f"{ext}_source"] = os.path.basename(file_path) + "|" + member.name
 
                 with tf.extractfile(member) as fp:
                     content_bytes = fp.read()
@@ -274,9 +270,7 @@ def _get_relations_from_sample(sample_id, sample, split):
             rel["concept_2"]["end_line"],
             rel["concept_2"]["end_token"],
         )
-        a["id"] = (
-            sample_id + "_" + a["arg1_id"] + "_" + rel["relation"] + "_" + a["arg2_id"]
-        )
+        a["id"] = sample_id + "_" + a["arg1_id"] + "_" + rel["relation"] + "_" + a["arg2_id"]
         a["normalized"] = []
         a["type"] = rel["relation"]
         relations.append(a)
@@ -300,11 +294,9 @@ def _get_entities_from_sample(sample_id, sample, split):
 
     entities = []
     for ii_cp, cp in enumerate(con_parsed):
-
         # annotations can span multiple lines
         # we loop over all lines and build up the character offsets
         for ii_line in range(cp["start_line"], cp["end_line"] + 1):
-
             # character offset to the beginning of the line
             # line length of each line + 1 new line character for each line
             start_line_off = sum(text_line_lengths[: ii_line - 1]) + (ii_line - 1)
@@ -420,7 +412,6 @@ class N2C22010RelationsDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = _SOURCE_CONFIG_NAME
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == SOURCE:
             features = datasets.Features(
                 {
@@ -493,11 +484,8 @@ class N2C22010RelationsDataset(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
-
         if self.config.data_dir is None or self.config.name is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir and name kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir and name kwarg to load_dataset.")
         else:
             data_dir = self.config.data_dir
 
@@ -525,9 +513,7 @@ class N2C22010RelationsDataset(datasets.GeneratorBasedBuilder):
             "doc_id": sample_id,
             "text": sample.get("txt", ""),
             "concepts": list(map(_parse_con_line, sample.get("con", "").splitlines())),
-            "assertions": list(
-                map(_parse_ast_line, sample.get("ast", "").splitlines())
-            ),
+            "assertions": list(map(_parse_ast_line, sample.get("ast", "").splitlines())),
             "relations": list(map(_parse_rel_line, sample.get("rel", "").splitlines())),
             "unannotated": sample.get("unannotated", ""),
             "metadata": {
@@ -541,7 +527,6 @@ class N2C22010RelationsDataset(datasets.GeneratorBasedBuilder):
 
     @staticmethod
     def _get_bigbio_sample(sample_id, sample, split) -> dict:
-
         passage_text = sample.get("txt", "")
         entities = _get_entities_from_sample(sample_id, sample, split)
         relations = _get_relations_from_sample(sample_id, sample, split)
@@ -564,23 +549,16 @@ class N2C22010RelationsDataset(datasets.GeneratorBasedBuilder):
 
     def _generate_examples(self, data_dir, split):
         if split == "train":
-            samples = _read_tar_gz(
-                os.path.join(
-                    data_dir, "concept_assertion_relation_training_data.tar.gz"
-                )
-            )
+            samples = _read_tar_gz(os.path.join(data_dir, "concept_assertion_relation_training_data.tar.gz"))
         elif split == "test":
             # This file adds con, ast and rel
-            samples = _read_tar_gz(
-                os.path.join(data_dir, "reference_standard_for_test_data.tar.gz")
-            )
+            samples = _read_tar_gz(os.path.join(data_dir, "reference_standard_for_test_data.tar.gz"))
             # This file adds txt to already existing samples
             samples = _read_tar_gz(os.path.join(data_dir, "test_data.tar.gz"), samples)
 
         _id = 0
 
         for sample_id, sample in samples.items():
-
             if self.config.name == N2C22010RelationsDataset._SOURCE_CONFIG_NAME:
                 yield _id, self._get_source_sample(sample_id, sample)
             elif self.config.name == N2C22010RelationsDataset._BIGBIO_CONFIG_NAME:
@@ -590,10 +568,11 @@ class N2C22010RelationsDataset(datasets.GeneratorBasedBuilder):
 
             _id += 1
 
+
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/n2c2_2010/',
-                                    name='n2c2_2010_source')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/n2c2_2010/", name="n2c2_2010_source"
+    )
     print(__file__)
     print("---------------")
     print(dataset["train"][3].keys())
@@ -605,5 +584,5 @@ if __name__ == "__main__":
         if concept not in concepts_dict:
             concepts_dict[concept] = []
         concepts_dict[concept].append(item["text"])
-    
+
     print(concepts_dict)

@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -524,7 +523,6 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
     )
 
     def _info(self):
-
         # BioASQ Task B source schema
         if self.config.schema == "source":
             features = datasets.Features(
@@ -575,13 +573,9 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
         """
         # BLURB is based on version 7
         version = (
-            re.search(r"bioasq_([0-9]+)b", self.config.subset_id).group(1)
-            if "blurb" not in self.config.name
-            else "7"
+            re.search(r"bioasq_([0-9]+)b", self.config.subset_id).group(1) if "blurb" not in self.config.name else "7"
         )
-        gold_fpath = os.path.join(
-            data_dir, f"Task{version}BGoldenEnriched/bx_golden.json"
-        )
+        gold_fpath = os.path.join(data_dir, f"Task{version}BGoldenEnriched/bx_golden.json")
 
         if not os.path.exists(gold_fpath):
             # combine all gold json files
@@ -672,15 +666,10 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
         """Returns SplitGenerators."""
 
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
 
         train_dir, test_dir = dl_manager.download_and_extract(
-            [
-                os.path.join(self.config.data_dir, _url)
-                for _url in _URLs[self.config.subset_id]
-            ]
+            [os.path.join(self.config.data_dir, _url) for _url in _URLs[self.config.subset_id]]
         )
         # create gold dump and get path
         gold_fpath = self._dump_gold_json(test_dir)
@@ -706,9 +695,7 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
-                    "filepath": os.path.join(
-                        train_dir, train_fpaths[self.config.subset_id]
-                    ),
+                    "filepath": os.path.join(train_dir, train_fpaths[self.config.subset_id]),
                     "split": "train",
                 },
             ),
@@ -730,9 +717,7 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
             # summary question types only have an ideal answer, so use that for bigbio
             if self.config.schema == "bigbio_qa":
                 exact_answer = (
-                    record["ideal_answer"]
-                    if isinstance(record["ideal_answer"], list)
-                    else [record["ideal_answer"]]
+                    record["ideal_answer"] if isinstance(record["ideal_answer"], list) else [record["ideal_answer"]]
                 )
 
         elif record["type"] == "list":
@@ -740,9 +725,7 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
         elif record["type"] == "factoid":
             # older version of bioasq sometimes represent this as as string
             exact_answer = (
-                record["exact_answer"]
-                if isinstance(record["exact_answer"], list)
-                else [record["exact_answer"]]
+                record["exact_answer"] if isinstance(record["exact_answer"], list) else [record["exact_answer"]]
             )
         return exact_answer
 
@@ -793,5 +776,3 @@ class BioasqTaskBDataset(datasets.GeneratorBasedBuilder):
                                 "answer": self._get_exact_answer(record),
                             }
                             uid += 1
-
-

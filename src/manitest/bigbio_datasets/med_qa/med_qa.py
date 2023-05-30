@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +31,7 @@ from .bigbiohub import BigBioConfig
 from .bigbiohub import Tasks
 
 
-#_LANGUAGES = [Lang.EN]
+# _LANGUAGES = [Lang.EN]
 _PUBMED = False
 _LOCAL = False
 
@@ -62,7 +61,6 @@ comprehension models can obtain necessary knowledge for answering the questions.
 """
 
 _HOMEPAGE = "https://github.com/jind11/MedQA"
-
 
 
 _URLS = {
@@ -118,7 +116,6 @@ class MedQADataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "med_qa_en_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -152,7 +149,7 @@ class MedQADataset(datasets.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=features,
             homepage=_HOMEPAGE,
-            #license=str(_LICENSE),
+            # license=str(_LICENSE),
             citation=_CITATION,
         )
 
@@ -171,27 +168,15 @@ class MedQADataset(datasets.GeneratorBasedBuilder):
             }
         elif self.config.subset_id == "med_qa_tw_en":
             paths = {
-                "train": os.path.join(
-                    base_dir, "Taiwan", "tw_translated_jsonl", "en", "train-2en.jsonl"
-                ),
-                "test": os.path.join(
-                    base_dir, "Taiwan", "tw_translated_jsonl", "en", "test-2en.jsonl"
-                ),
-                "valid": os.path.join(
-                    base_dir, "Taiwan", "tw_translated_jsonl", "en", "dev-2en.jsonl"
-                ),
+                "train": os.path.join(base_dir, "Taiwan", "tw_translated_jsonl", "en", "train-2en.jsonl"),
+                "test": os.path.join(base_dir, "Taiwan", "tw_translated_jsonl", "en", "test-2en.jsonl"),
+                "valid": os.path.join(base_dir, "Taiwan", "tw_translated_jsonl", "en", "dev-2en.jsonl"),
             }
         elif self.config.subset_id == "med_qa_tw_zh":
             paths = {
-                "train": os.path.join(
-                    base_dir, "Taiwan", "tw_translated_jsonl", "zh", "train-2zh.jsonl"
-                ),
-                "test": os.path.join(
-                    base_dir, "Taiwan", "tw_translated_jsonl", "zh", "test-2zh.jsonl"
-                ),
-                "valid": os.path.join(
-                    base_dir, "Taiwan", "tw_translated_jsonl", "zh", "dev-2zh.jsonl"
-                ),
+                "train": os.path.join(base_dir, "Taiwan", "tw_translated_jsonl", "zh", "train-2zh.jsonl"),
+                "test": os.path.join(base_dir, "Taiwan", "tw_translated_jsonl", "zh", "test-2zh.jsonl"),
+                "valid": os.path.join(base_dir, "Taiwan", "tw_translated_jsonl", "zh", "dev-2zh.jsonl"),
             }
 
         return [
@@ -222,10 +207,7 @@ class MedQADataset(datasets.GeneratorBasedBuilder):
         if self.config.schema == "source":
             for key, example in data.iterrows():
                 example = example.to_dict()
-                example["options"] = [
-                    {"key": key, "value": value}
-                    for key, value in example["options"].items()
-                ]
+                example["options"] = [{"key": key, "value": value} for key, value in example["options"].items()]
                 yield key, example
 
         elif self.config.schema == "bigbio_qa":
@@ -242,8 +224,9 @@ class MedQADataset(datasets.GeneratorBasedBuilder):
                 example_["answer"] = f'({example["answer_idx"]})'
                 yield key, example_
 
+
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/med_qa',
-                                    name='med_qa_en_bigbio_qa')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/med_qa", name="med_qa_en_bigbio_qa"
+    )
     print(dataset)

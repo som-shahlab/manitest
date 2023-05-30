@@ -198,7 +198,6 @@ SCHEMA_TO_FEATURES = {
 
 
 def get_texts_and_offsets_from_bioc_ann(ann: "bioc.BioCAnnotation") -> Tuple:
-
     offsets = [(loc.offset, loc.offset + loc.length) for loc in ann.locations]
 
     text = ann.text
@@ -331,9 +330,7 @@ def parse_brat_file(
         annotation_file_suffixes = [".a1", ".a2", ".ann"]
 
     if len(annotation_file_suffixes) == 0:
-        raise AssertionError(
-            "At least one suffix for the to-be-read annotation files should be given!"
-        )
+        raise AssertionError("At least one suffix for the to-be-read annotation files should be given!")
 
     ann_lines = []
     for suffix in annotation_file_suffixes:
@@ -524,11 +521,7 @@ def brat_parse_to_bigbio_kb(brat_parse: Dict) -> Dict:
     for event in brat_parse["events"]:
         event = event.copy()
         event["id"] = id_prefix + event["id"]
-        trigger = next(
-            tr
-            for tr in brat_parse["text_bound_annotations"]
-            if tr["id"] == event["trigger"]
-        )
+        trigger = next(tr for tr in brat_parse["text_bound_annotations"] if tr["id"] == event["trigger"])
         if trigger in non_event_ann:
             non_event_ann.remove(trigger)
         event["trigger"] = {
@@ -552,10 +545,7 @@ def brat_parse_to_bigbio_kb(brat_parse: Dict) -> Dict:
     unified_example["relations"] = []
     skipped_relations = set()
     for ann in brat_parse["relations"]:
-        if (
-            ann["head"]["ref_id"] not in anno_ids
-            or ann["tail"]["ref_id"] not in anno_ids
-        ):
+        if ann["head"]["ref_id"] not in anno_ids or ann["tail"]["ref_id"] not in anno_ids:
             skipped_relations.add(ann["id"])
             continue
         unified_example["relations"].append(
@@ -586,7 +576,5 @@ def brat_parse_to_bigbio_kb(brat_parse: Dict) -> Dict:
                 is_entity_cluster = False
         if is_entity_cluster:
             entity_ids = [id_prefix + i for i in ann["ref_ids"]]
-            unified_example["coreferences"].append(
-                {"id": id_prefix + str(i), "entity_ids": entity_ids}
-            )
+            unified_example["coreferences"].append({"id": id_prefix + str(i), "entity_ids": entity_ids})
     return unified_example

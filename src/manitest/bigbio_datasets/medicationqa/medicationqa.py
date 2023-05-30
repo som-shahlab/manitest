@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -87,26 +86,16 @@ class medicationqaDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "medicationqa_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
-            features = datasets.Features(
-                {
-                    
-                }
-            )
+            features = datasets.Features({})
 
         # need to modify:
         if self.config.schema == "source":
-            features = datasets.Features(
-                {
-                    
-                }
-            )
+            features = datasets.Features({})
         # simplified schema for QA tasks
 
         elif self.config.schema == "bigbio_qa":
             features = qa_features
-
 
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
@@ -118,9 +107,7 @@ class medicationqaDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -154,34 +141,32 @@ class medicationqaDataset(datasets.GeneratorBasedBuilder):
                 df = pd.read_excel(filepath)
 
                 for idx, row in df.iterrows():
-                    if row['Question'].endswith('?'):
-                
+                    if row["Question"].endswith("?"):
                         yield idx, {
-                        "id": idx,
-                        "question_id": idx,
-                        "document_id": 'NULL',
-                        "question": row['Question'],
-                        "type": row['Question Type'],
-                        "choices": [],
-                        "context": row['Section Title'],
-                        "answer": [row['Answer']],
+                            "id": idx,
+                            "question_id": idx,
+                            "document_id": "NULL",
+                            "question": row["Question"],
+                            "type": row["Question Type"],
+                            "choices": [],
+                            "context": row["Section Title"],
+                            "answer": [row["Answer"]],
                         }
                     else:
                         yield idx, {
-                        "id": idx,
-                        "question_id": idx,
-                        "document_id": 'NULL',
-                        "question": row['Question']+'?',
-                        "type": row['Question Type'],
-                        "choices": [],
-                        "context": row['Section Title'],
-                        "answer": [row['Answer']],
+                            "id": idx,
+                            "question_id": idx,
+                            "document_id": "NULL",
+                            "question": row["Question"] + "?",
+                            "type": row["Question Type"],
+                            "choices": [],
+                            "context": row["Section Title"],
+                            "answer": [row["Answer"]],
                         }
-                            
 
 
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/medicationqa',
-                                    name='medicationqa_bigbio_qa')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/medicationqa", name="medicationqa_bigbio_qa"
+    )
     print(dataset)

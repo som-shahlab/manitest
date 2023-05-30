@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,13 +85,8 @@ class PhenoAnnoDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "phenoanno_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
-            features = datasets.Features(
-                {
-                   
-                }
-            )
+            features = datasets.Features({})
 
         elif self.config.schema == "bigbio_txtclass":
             features = text_features
@@ -106,12 +100,10 @@ class PhenoAnnoDataset(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
-        #print(f"split Generator {self.config.data_dir}")
-        
+        # print(f"split Generator {self.config.data_dir}")
+
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -134,21 +126,23 @@ class PhenoAnnoDataset(datasets.GeneratorBasedBuilder):
                 gen_kwargs={
                     "filepath": os.path.join(data_dir, "train.csv"),
                     "split": "train",
-                    "labels": ['cohort',
-                                'Obesity',
-                                'Non.Adherence',
-                                'Developmental.Delay.Retardation',
-                                'Advanced.Heart.Disease',
-                                'Advanced.Lung.Disease',
-                                'Schizophrenia.and.other.Psychiatric.Disorders',
-                                'Alcohol.Abuse',
-                                'Other.Substance.Abuse',
-                                'Chronic.Pain.Fibromyalgia',
-                                'Chronic.Neurological.Dystrophies',
-                                'Advanced.Cancer',
-                                'Depression',
-                                'Dementia',
-                                'Unsure',]
+                    "labels": [
+                        "cohort",
+                        "Obesity",
+                        "Non.Adherence",
+                        "Developmental.Delay.Retardation",
+                        "Advanced.Heart.Disease",
+                        "Advanced.Lung.Disease",
+                        "Schizophrenia.and.other.Psychiatric.Disorders",
+                        "Alcohol.Abuse",
+                        "Other.Substance.Abuse",
+                        "Chronic.Pain.Fibromyalgia",
+                        "Chronic.Neurological.Dystrophies",
+                        "Advanced.Cancer",
+                        "Depression",
+                        "Dementia",
+                        "Unsure",
+                    ],
                 },
             ),
             datasets.SplitGenerator(
@@ -156,21 +150,23 @@ class PhenoAnnoDataset(datasets.GeneratorBasedBuilder):
                 gen_kwargs={
                     "filepath": os.path.join(data_dir, "test.csv"),
                     "split": "test",
-                    "labels": ['cohort',
-                                'Obesity',
-                                'Non.Adherence',
-                                'Developmental.Delay.Retardation',
-                                'Advanced.Heart.Disease',
-                                'Advanced.Lung.Disease',
-                                'Schizophrenia.and.other.Psychiatric.Disorders',
-                                'Alcohol.Abuse',
-                                'Other.Substance.Abuse',
-                                'Chronic.Pain.Fibromyalgia',
-                                'Chronic.Neurological.Dystrophies',
-                                'Advanced.Cancer',
-                                'Depression',
-                                'Dementia',
-                                'Unsure',]
+                    "labels": [
+                        "cohort",
+                        "Obesity",
+                        "Non.Adherence",
+                        "Developmental.Delay.Retardation",
+                        "Advanced.Heart.Disease",
+                        "Advanced.Lung.Disease",
+                        "Schizophrenia.and.other.Psychiatric.Disorders",
+                        "Alcohol.Abuse",
+                        "Other.Substance.Abuse",
+                        "Chronic.Pain.Fibromyalgia",
+                        "Chronic.Neurological.Dystrophies",
+                        "Advanced.Cancer",
+                        "Depression",
+                        "Dementia",
+                        "Unsure",
+                    ],
                 },
             ),
             datasets.SplitGenerator(
@@ -178,21 +174,23 @@ class PhenoAnnoDataset(datasets.GeneratorBasedBuilder):
                 gen_kwargs={
                     "filepath": os.path.join(data_dir, "val.csv"),
                     "split": "dev",
-                    "labels": ['cohort',
-                                'Obesity',
-                                'Non.Adherence',
-                                'Developmental.Delay.Retardation',
-                                'Advanced.Heart.Disease',
-                                'Advanced.Lung.Disease',
-                                'Schizophrenia.and.other.Psychiatric.Disorders',
-                                'Alcohol.Abuse',
-                                'Other.Substance.Abuse',
-                                'Chronic.Pain.Fibromyalgia',
-                                'Chronic.Neurological.Dystrophies',
-                                'Advanced.Cancer',
-                                'Depression',
-                                'Dementia',
-                                'Unsure',]
+                    "labels": [
+                        "cohort",
+                        "Obesity",
+                        "Non.Adherence",
+                        "Developmental.Delay.Retardation",
+                        "Advanced.Heart.Disease",
+                        "Advanced.Lung.Disease",
+                        "Schizophrenia.and.other.Psychiatric.Disorders",
+                        "Alcohol.Abuse",
+                        "Other.Substance.Abuse",
+                        "Chronic.Pain.Fibromyalgia",
+                        "Chronic.Neurological.Dystrophies",
+                        "Advanced.Cancer",
+                        "Depression",
+                        "Dementia",
+                        "Unsure",
+                    ],
                 },
             ),
         ]
@@ -205,24 +203,21 @@ class PhenoAnnoDataset(datasets.GeneratorBasedBuilder):
                     yield json_line["pair_id"], json_line
 
             elif self.config.schema == "bigbio_txtclass":
-                
                 df = pd.read_csv(filepath)
                 for index, row in df.iterrows():
                     label_vals = np.array([row[label] for label in labels])
                     yield row.iloc[0], {
-                        'id': int(index),
+                        "id": int(index),
                         "document_id": int(index),
-                        "text": row['text'],
+                        "text": row["text"],
                         "labels": label_vals,
-                    } 
-                    
+                    }
 
 
-
-
-                
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/pheno_anno',
-                                    name='phenoanno_bigbio_txtclass')
+    dataset = datasets.load_dataset(
+        __file__,
+        data_dir="/local-scratch/nigam/projects/clinical_llm/data/pheno_anno",
+        name="phenoanno_bigbio_txtclass",
+    )
     print(dataset)

@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,11 +44,11 @@ _DATASETNAME = "openi"
 _DISPLAYNAME = "OpenI"
 
 _DESCRIPTION = """\
-Open-i service of the National Library of Medicine enables search and retrieval of abstracts 
-and images (including charts, graphs, clinical images, etc.) from the open source literature, 
-and biomedical image collections. Searching may be done using text queries as well as query 
-images. Open-i provides access to over 3.7 million images from about 1.2 million PubMed Central® 
-articles; 7,470 chest x-rays with 3,955 radiology reports; 67,517 images from NLM History of 
+Open-i service of the National Library of Medicine enables search and retrieval of abstracts
+and images (including charts, graphs, clinical images, etc.) from the open source literature,
+and biomedical image collections. Searching may be done using text queries as well as query
+images. Open-i provides access to over 3.7 million images from about 1.2 million PubMed Central®
+articles; 7,470 chest x-rays with 3,955 radiology reports; 67,517 images from NLM History of
 Medicine collection; and 2,064 orthopedic illustrations.
 """
 
@@ -65,10 +64,24 @@ _SUPPORTED_TASKS = [Tasks.TEXTUAL_ENTAILMENT]
 _SOURCE_VERSION = "1.0.0"
 _BIGBIO_VERSION = "1.0.0"
 
-_CARDIOMEGALY_SYNSET = ["cardiomegaly", "cardiac enlargement", "enlarged heart", "enlargement heart", "heart size increased", "megalocardia"]
+_CARDIOMEGALY_SYNSET = [
+    "cardiomegaly",
+    "cardiac enlargement",
+    "enlarged heart",
+    "enlargement heart",
+    "heart size increased",
+    "megalocardia",
+]
 _EDEMA_SYNSET = ["edema", "wet lungs"]
 _CONSOLIDATION_SYNSET = ["consolidation"]
-_PNEUMONIA_SYNSET = ["pneumonia", "inflammation lung", "pulmonary inflammation", "pneumoniae", "pneumonitides", "pneumonitis"]
+_PNEUMONIA_SYNSET = [
+    "pneumonia",
+    "inflammation lung",
+    "pulmonary inflammation",
+    "pneumoniae",
+    "pneumonitides",
+    "pneumonitis",
+]
 _ATELECTASIS_SYNSET = ["atelectasis", "atelectases", "collapsed lung", "collapse; pulmonary"]
 _PNEUMOTHORAX_SYNSET = ["pneumothorax", "free air in the chest outside the lung", "pleural air collection"]
 _PLEURAL_EFFUSION_SYNSET = ["pleural effusion", "fluid in the chest", "pleural cavity effusion"]
@@ -82,6 +95,7 @@ DISEASE_LIST = [
     _PNEUMOTHORAX_SYNSET,
     _PLEURAL_EFFUSION_SYNSET,
 ]
+
 
 class OpenIDataset(datasets.GeneratorBasedBuilder):
     """openi"""
@@ -109,7 +123,6 @@ class OpenIDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "openi_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -120,7 +133,7 @@ class OpenIDataset(datasets.GeneratorBasedBuilder):
                     "atelectasis": datasets.Value("string"),
                     "pneumothorax": datasets.Value("string"),
                     "pleural effusion": datasets.Value("string"),
-                    "text": datasets.Value("string")
+                    "text": datasets.Value("string"),
                 }
             )
 
@@ -137,9 +150,7 @@ class OpenIDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -159,9 +170,9 @@ class OpenIDataset(datasets.GeneratorBasedBuilder):
     def _generate_examples(self, datapath, split: str) -> Tuple[int, Dict]:
         for i, filename in enumerate(os.listdir(datapath)):
             if not filename.endswith(".xml"):
-                assert("Should only be xml files in the directory")
+                assert "Should only be xml files in the directory"
             else:
-                xml_path  = os.path.join(datapath, filename)
+                xml_path = os.path.join(datapath, filename)
                 with open(xml_path, "r") as f:
                     xml_text = f.read()
                     text = ""
@@ -172,7 +183,9 @@ class OpenIDataset(datasets.GeneratorBasedBuilder):
                     try:
                         if text != "":
                             text += " "
-                        text += re.search(r"<AbstractText Label=\"IMPRESSION\">(.*?)<\/AbstractText>", xml_text).group(1)
+                        text += re.search(r"<AbstractText Label=\"IMPRESSION\">(.*?)<\/AbstractText>", xml_text).group(
+                            1
+                        )
                     except:
                         pass
 
@@ -188,20 +201,31 @@ class OpenIDataset(datasets.GeneratorBasedBuilder):
                                 label_list.append(1)
                         else:
                             if self.config.schema == "source":
-                                label_list.append("no")    
+                                label_list.append("no")
                             else:
                                 label_list.append(0)
 
                 if self.config.schema == "source":
-                    yield i, {"cardiomegaly": label_list[0], "edema": label_list[1], "consolidation": label_list[2],  "pneumonia": label_list[3], "atelectasis": label_list[4], "pneumothorax": label_list[5], "pleural effusion": label_list[6], "text": text}
+                    yield i, {
+                        "cardiomegaly": label_list[0],
+                        "edema": label_list[1],
+                        "consolidation": label_list[2],
+                        "pneumonia": label_list[3],
+                        "atelectasis": label_list[4],
+                        "pneumothorax": label_list[5],
+                        "pleural effusion": label_list[6],
+                        "text": text,
+                    }
 
                 elif self.config.schema == "bigbio_tf":
                     yield i, {"id": i, "document_id": i, "text": text, "labels": label_list}
 
 
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/dataNAS/people/lblankem/clinical-llm/datasets/ecgen-radiology-20230211T022908Z-001.zip',
-                                    name='openi_source')
-    print(dataset['test'][2])
+    dataset = datasets.load_dataset(
+        __file__,
+        data_dir="/dataNAS/people/lblankem/clinical-llm/datasets/ecgen-radiology-20230211T022908Z-001.zip",
+        name="openi_source",
+    )
+    print(dataset["test"][2])
     print(dataset)

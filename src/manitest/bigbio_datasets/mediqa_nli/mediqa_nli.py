@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +45,7 @@ from .bigbiohub import entailment_features
 from .bigbiohub import BigBioConfig
 from .bigbiohub import Tasks
 
-_LANGUAGES = ['English']
+_LANGUAGES = ["English"]
 _PUBMED = False
 _LOCAL = True
 _CITATION = """\
@@ -81,7 +80,7 @@ unseen dataset for scoring each participant submission.
 
 _HOMEPAGE = "https://physionet.org/content/mednli-bionlp19/1.0.1/"
 
-_LICENSE = 'PhysioNet Credentialed Health Data License'
+_LICENSE = "PhysioNet Credentialed Health Data License"
 
 _URLS = {}
 
@@ -117,7 +116,6 @@ class MEDIQANLIDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "mediqa_nli_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -145,9 +143,7 @@ class MEDIQANLIDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -155,32 +151,21 @@ class MEDIQANLIDataset(datasets.GeneratorBasedBuilder):
                     "mednli-for-shared-task-at-acl-bionlp-2019-1.0.1.zip",
                 )
             )
-            data_dir = os.path.join(
-                extract_dir, "mednli-for-shared-task-at-acl-bionlp-2019-1.0.1"
-            )
+            data_dir = os.path.join(extract_dir, "mednli-for-shared-task-at-acl-bionlp-2019-1.0.1")
 
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "examples_filepath": os.path.join(
-                        data_dir, "mednli_bionlp19_shared_task.jsonl"
-                    ),
-                    "ground_truth_filepath": os.path.join(
-                        data_dir, "mednli_bionlp19_shared_task_ground_truth.csv"
-                    ),
+                    "examples_filepath": os.path.join(data_dir, "mednli_bionlp19_shared_task.jsonl"),
+                    "ground_truth_filepath": os.path.join(data_dir, "mednli_bionlp19_shared_task_ground_truth.csv"),
                     "split": "test",
                 },
             ),
         ]
 
-    def _generate_examples(
-        self, examples_filepath: str, ground_truth_filepath: str, split: str
-    ) -> Tuple[int, Dict]:
-
-        ground_truth = pd.read_csv(
-            ground_truth_filepath, index_col=0, squeeze=True
-        ).to_dict()
+    def _generate_examples(self, examples_filepath: str, ground_truth_filepath: str, split: str) -> Tuple[int, Dict]:
+        ground_truth = pd.read_csv(ground_truth_filepath, index_col=0, squeeze=True).to_dict()
         with open(examples_filepath, "r") as f:
             if self.config.schema == "source":
                 for line in f:

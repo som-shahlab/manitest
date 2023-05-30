@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,6 +76,7 @@ _SUPPORTED_TASKS = [Tasks.TEXTUAL_ENTAILMENT]
 _SOURCE_VERSION = "1.0.0"
 _BIGBIO_VERSION = "1.0.0"
 
+
 class BioNLP2023_ST_1A_Dataset(datasets.GeneratorBasedBuilder):
     """openi"""
 
@@ -103,14 +103,8 @@ class BioNLP2023_ST_1A_Dataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "bionlp_2023_st_1a_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
-            features = datasets.Features(
-                {
-                    "text_1": datasets.Value("string"),
-                    "text_2": datasets.Value("string")
-                }
-            )
+            features = datasets.Features({"text_1": datasets.Value("string"), "text_2": datasets.Value("string")})
 
         elif self.config.schema == "bigbio_tf":
             features = text2text_features
@@ -125,9 +119,7 @@ class BioNLP2023_ST_1A_Dataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -138,7 +130,9 @@ class BioNLP2023_ST_1A_Dataset(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "datapath": os.path.join(extract_dir, "bionlp-workshop-2023-shared-task-1a-problem-list-summarization-1.0.0"),
+                    "datapath": os.path.join(
+                        extract_dir, "bionlp-workshop-2023-shared-task-1a-problem-list-summarization-1.0.0"
+                    ),
                     "split": "test",
                 },
             )
@@ -159,42 +153,49 @@ class BioNLP2023_ST_1A_Dataset(datasets.GeneratorBasedBuilder):
         fids = data["File ID"].tolist()
         srcs = data["Assessment"].tolist()
         tgts = data["Summary"].tolist()
-        #sos = data["SO"].tolist() # Added August 21: adding Subjective and Objective sections 
-        ss = data['Subjective Sections'].tolist()
-        ob = data['Objective Sections'].tolist()
+        # sos = data["SO"].tolist() # Added August 21: adding Subjective and Objective sections
+        ss = data["Subjective Sections"].tolist()
+        ob = data["Objective Sections"].tolist()
 
         i = 0
 
-        for (fid, src, gts, s, o) in zip(fids, srcs, tgts, ss, ob):
-            tgt = re.sub('\W+',' ',gts) 
-            #noteid = self.fids[idx]
-            #gts = self.tgts[idx]
-            #tgt = re.sub('\W+',' ',gts)
+        for fid, src, gts, s, o in zip(fids, srcs, tgts, ss, ob):
+            tgt = re.sub("\W+", " ", gts)
+            # noteid = self.fids[idx]
+            # gts = self.tgts[idx]
+            # tgt = re.sub('\W+',' ',gts)
             # if self.summ_type == "All":
-            '''
+            """
             input_str = self.prefix + " <ASSESSMENT> "+ src + " <SUBJECTIVE> "+ s +" <OBJECTIVE> " + o
             elif self.summ_type == "S+A":
-                input_str = self.prefix + " <ASSESSMENT> "+ src + " <SUBJECTIVE> "+ s 
+                input_str = self.prefix + " <ASSESSMENT> "+ src + " <SUBJECTIVE> "+ s
             else:
-                input_str = self.prefix + " <ASSESSMENT> "+ src 
-            '''
+                input_str = self.prefix + " <ASSESSMENT> "+ src
+            """
 
-            input_str = "<ASSESSMENT> "+ src + " <SUBJECTIVE> "+ s +" <OBJECTIVE> " + o
+            input_str = "<ASSESSMENT> " + src + " <SUBJECTIVE> " + s + " <OBJECTIVE> " + o
 
             if self.config.schema == "source":
                 yield i, {"text_1": input_str, "text_2": tgt}
 
             elif self.config.schema == "bigbio_tf":
-                yield i, {"id": i, "document_id": fid, "text_1": input_str, "text_2": tgt, "text_1_name": "note", "text_2_name": "summary"}
+                yield i, {
+                    "id": i,
+                    "document_id": fid,
+                    "text_1": input_str,
+                    "text_2": tgt,
+                    "text_1_name": "note",
+                    "text_2_name": "summary",
+                }
 
             i += 1
 
 
-'''
+"""
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
+    dataset = datasets.load_dataset(__file__,
                                     data_dir='/dataNAS/people/lblankem/clinical-llm/datasets/bionlp-workshop-2023-shared-task-1a-problem-list-summarization-1.0.0.zip',
                                     name='bionlp_2023_st_1a_source')
     print(dataset['test'][2])
     print(dataset)
-'''
+"""
