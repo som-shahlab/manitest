@@ -22,6 +22,7 @@ from loguru import logger
 from manifest import Manifest
 from datasets import DatasetDict, Dataset
 from urllib.parse import urlparse
+import warnings
 
 import sys
 
@@ -54,7 +55,14 @@ def main(args):
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
     # Get dataset for in-context shots
-    in_context_shot_dataset: Dataset = dataset["train"]
+
+    if "train" in dataset:
+        in_context_shot_dataset: Dataset = dataset["train"]
+    elif "validation" in dataset:
+        in_context_shot_dataset: Dataset = dataset["validation"]
+    else:
+        warnings.warn("No train or validation set available. Therefore, few-shot incontext prompt will not be possible")
+        in_context_shot_dataset = None  
 
     # Get dataset splits that we evaluate model on
     try:
