@@ -1,5 +1,5 @@
 ---
-language: 
+language:
 - en
 bigbio_language:
 - English

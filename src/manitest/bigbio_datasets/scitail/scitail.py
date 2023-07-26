@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,7 +100,6 @@ class SciTailDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "scitail_source"
 
     def _info(self):
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -124,7 +122,6 @@ class SciTailDataset(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager):
-
         extract_dir = dl_manager.extract(
             os.path.join(
                 self.config.data_dir,
@@ -136,25 +133,19 @@ class SciTailDataset(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
-                    "filepath": os.path.join(
-                        extract_dir, "SciTailV1.1", "tsv_format", "scitail_1.0_train.tsv"
-                    ),
+                    "filepath": os.path.join(extract_dir, "SciTailV1.1", "tsv_format", "scitail_1.0_train.tsv"),
                 },
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "filepath": os.path.join(
-                        extract_dir, "SciTailV1.1", "tsv_format", "scitail_1.0_test.tsv"
-                    ),
+                    "filepath": os.path.join(extract_dir, "SciTailV1.1", "tsv_format", "scitail_1.0_test.tsv"),
                 },
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.VALIDATION,
                 gen_kwargs={
-                    "filepath": os.path.join(
-                        extract_dir, "SciTailV1.1", "tsv_format", "scitail_1.0_dev.tsv"
-                    ),
+                    "filepath": os.path.join(extract_dir, "SciTailV1.1", "tsv_format", "scitail_1.0_dev.tsv"),
                 },
             ),
         ]
@@ -162,9 +153,7 @@ class SciTailDataset(datasets.GeneratorBasedBuilder):
     def _generate_examples(self, filepath):
         # since examples can contain quotes mid text set quoting to QUOTE_NONE (3) when reading tsv
         # e.g.: ... and apply specific "tools" to examples and ...
-        data = pd.read_csv(
-            filepath, sep="\t", names=["premise", "hypothesis", "label"], quoting=3
-        )
+        data = pd.read_csv(filepath, sep="\t", names=["premise", "hypothesis", "label"], quoting=3)
         data["id"] = data.index
 
         if self.config.schema == "source":

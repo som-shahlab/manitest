@@ -4,7 +4,7 @@ from datasets import load_dataset, DatasetDict
 from typing import List, Optional
 from manitest.base import Prompt, PromptForClassification, TaskType, Task
 
- 
+
 ####################################
 # Prompt definitions
 ####################################
@@ -41,6 +41,7 @@ class Prompt1(PromptForClassification):
 # Task definition
 ####################################
 
+
 class MedNLIEval(Task):
     name: str = "mednli"
     task_type: TaskType = TaskType.BINARY_CLASSIFICATION
@@ -48,11 +49,11 @@ class MedNLIEval(Task):
     def __init__(self):
         shots: int = 2
         self.prompts: List[Prompt] = [
-            # Prompt0(), 
-            Prompt1(), 
-            # Prompt2(), 
-            # Prompt3(), 
-            # Prompt4(), 
+            # Prompt0(),
+            Prompt1(),
+            # Prompt2(),
+            # Prompt3(),
+            # Prompt4(),
             # Prompt5(),
         ]
 

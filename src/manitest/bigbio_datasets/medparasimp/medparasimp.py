@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,14 +64,16 @@ _HOMEPAGE = "https://github.com/AshOlogn/Paragraph-level-Simplification-of-Medic
 _LICENSE = "CC_BY_4p0"
 
 
-url_prefix = "https://raw.githubusercontent.com/AshOlogn/Paragraph-level-Simplification-of-Medical-Texts/main/data/data-1024/"
+url_prefix = (
+    "https://raw.githubusercontent.com/AshOlogn/Paragraph-level-Simplification-of-Medical-Texts/main/data/data-1024/"
+)
 _URLS = {
     _DATASETNAME: {
-        "train_doi": os.path.join(url_prefix, "train.doi"), 
-        "train_source": os.path.join(url_prefix, "train.source"), 
-        "train_target": os.path.join(url_prefix, "train.target"), 
-        "val_doi": os.path.join(url_prefix, "val.doi"), 
-        "val_source": os.path.join(url_prefix, "val.source"), 
+        "train_doi": os.path.join(url_prefix, "train.doi"),
+        "train_source": os.path.join(url_prefix, "train.source"),
+        "train_target": os.path.join(url_prefix, "train.target"),
+        "val_doi": os.path.join(url_prefix, "val.doi"),
+        "val_source": os.path.join(url_prefix, "val.source"),
         "val_target": os.path.join(url_prefix, "val.target"),
         "test_doi": os.path.join(url_prefix, "test.doi"),
         "test_source": os.path.join(url_prefix, "test.source"),
@@ -221,8 +222,9 @@ class MedParaSimpDataset(datasets.GeneratorBasedBuilder):
 
 
 if __name__ == "__main__":
-   dataset = datasets.load_dataset(__file__, 
-                                #    data_dir='1', 
-                                   name="medparasimp_bigbio_t2t")
-   print(dataset)
-
+    dataset = datasets.load_dataset(
+        __file__,
+        #    data_dir='1',
+        name="medparasimp_bigbio_t2t",
+    )
+    print(dataset)

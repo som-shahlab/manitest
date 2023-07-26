@@ -23,21 +23,21 @@ class Prompt1(PromptForClassification):
 
     def get_label(self, example: dict):
         """Maps attributes of a dataset example to a class (i.e. a [key] in `verbalizer`)"""
-        if example['answer'] in ["(A)"]:
+        if example["answer"] in ["(A)"]:
             return "A"
-        elif example['answer'] in ["(B)"]:
+        elif example["answer"] in ["(B)"]:
             return "B"
-        elif example['answer'] in ["(C)"]:
+        elif example["answer"] in ["(C)"]:
             return "C"
-        elif example['answer'] in ["(D)"]:
+        elif example["answer"] in ["(D)"]:
             return "D"
         else:
             raise ValueError(f"Unknown label {example['answer']}")
 
     def generate_query(self, example: dict) -> str:
         """Takes a dataset example and returns a version of that example formulated as a query
-            without its corresponding answer, e.g.
-                "Suppose X. Can we infer Y?"
+        without its corresponding answer, e.g.
+            "Suppose X. Can we infer Y?"
         """
         return f"Question: {example['question']}\nThe choices are: (A) {example['choices'][0]} (B) {example['choices'][1]} (C) {example['choices'][2]} (D) {example['choices'][3]}\nAnswer: "
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +58,7 @@ _SUPPORTED_TASKS = [Tasks.TEXTUAL_ENTAILMENT]
 _SOURCE_VERSION = "1.0.0"
 _BIGBIO_VERSION = "1.0.0"
 
-label_map = {'1': '(A)', '2': '(B)', '3': '(C)', '4': '(D)'}
+label_map = {"1": "(A)", "2": "(B)", "3": "(C)", "4": "(D)"}
 
 
 class medmcqaDataset(datasets.GeneratorBasedBuilder):
@@ -88,15 +87,9 @@ class medmcqaDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "medmcqa_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
-            features = datasets.Features(
-                {
-                   
-                }
-            )
+            features = datasets.Features({})
 
-        
         # simplified schema for QA tasks
 
         elif self.config.schema == "bigbio_qa":
@@ -113,7 +106,6 @@ class medmcqaDataset(datasets.GeneratorBasedBuilder):
                 }
             )
 
-
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
             features=features,
@@ -124,9 +116,7 @@ class medmcqaDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -171,10 +161,9 @@ class medmcqaDataset(datasets.GeneratorBasedBuilder):
                     yield json_line["title"], json_line
 
             elif self.config.schema == "bigbio_qa":
-                
                 for line in f:
                     line = json.loads(line)
-                    #print(label_map[str(line['cop'])])
+                    # print(label_map[str(line['cop'])])
                     # if split == 'test':
                     #     yield line['id'], {
                     #         "id": line['id'],
@@ -187,20 +176,25 @@ class medmcqaDataset(datasets.GeneratorBasedBuilder):
                     #         "answer": ['NULL'],
                     #         }
                     # else:
-                    yield line['id'], {
-                        "id": line['id'],
-                        "question_id": line['id'],
-                        "document_id": line['id'],
-                        "question": line['question'],
+                    yield line["id"], {
+                        "id": line["id"],
+                        "question_id": line["id"],
+                        "document_id": line["id"],
+                        "question": line["question"],
                         "type": line["choice_type"],
-                        "choices": [line['opa'],line['opb'],line['opc'],line['opd'],],
-                        "context": line['exp'],
-                        "answer": label_map[str(line['cop'])],
-                        }
+                        "choices": [
+                            line["opa"],
+                            line["opb"],
+                            line["opc"],
+                            line["opd"],
+                        ],
+                        "context": line["exp"],
+                        "answer": label_map[str(line["cop"])],
+                    }
 
 
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/medmcqa',
-                                    name='medmcqa_bigbio_qa')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/medmcqa", name="medmcqa_bigbio_qa"
+    )
     print(dataset)

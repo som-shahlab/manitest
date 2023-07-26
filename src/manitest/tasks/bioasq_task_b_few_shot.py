@@ -20,14 +20,16 @@ class Prompt1(PromptForGeneration):
 
     def generate_query(self, example: dict) -> str:
         """Takes a dataset example and returns a version of that example formulated as a query
-            without its corresponding answer, e.g.
-                "Suppose X. Can we infer Y?"
+        without its corresponding answer, e.g.
+            "Suppose X. Can we infer Y?"
         """
         return f"Question: {example['question']} \nAnswer: "
+
 
 ####################################
 # Task definition
 ####################################
+
 
 class BioASQ(Task):
     name: str = "bioasq_task_b"

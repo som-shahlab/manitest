@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,7 +101,6 @@ class RadnliDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "radnli_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -126,9 +124,7 @@ class RadnliDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -176,8 +172,9 @@ class RadnliDataset(datasets.GeneratorBasedBuilder):
                     }
                     yield json_line["pair_id"], entailment_example
 
+
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/radnli',
-                                    name='radnli_bigbio_te')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/radnli", name="radnli_bigbio_te"
+    )
     print(dataset)

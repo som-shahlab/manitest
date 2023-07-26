@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +83,6 @@ class clinicalqaDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "clinicalqa_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -99,12 +97,10 @@ class clinicalqaDataset(datasets.GeneratorBasedBuilder):
                 }
             )
 
-        
         # simplified schema for QA tasks
 
         elif self.config.schema == "bigbio_qa":
             features = qa_features
-
 
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
@@ -116,9 +112,7 @@ class clinicalqaDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -132,7 +126,6 @@ class clinicalqaDataset(datasets.GeneratorBasedBuilder):
             )
 
         return [
-            
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
@@ -140,7 +133,6 @@ class clinicalqaDataset(datasets.GeneratorBasedBuilder):
                     "split": "test",
                 },
             ),
-            
         ]
 
     def _generate_examples(self, filepath, split: str) -> Tuple[int, Dict]:
@@ -152,25 +144,25 @@ class clinicalqaDataset(datasets.GeneratorBasedBuilder):
 
             elif self.config.schema == "bigbio_qa":
                 file_data = json.loads(f.read())
-                file_data = file_data['data']
+                file_data = file_data["data"]
                 for line in file_data:
                     json_line = line["paragraphs"]
                     for qa_pairs in json_line:
-                        for qa in qa_pairs['qas']:
-                            yield qa['id'], {
-                                "id": qa['id'],
-                                "question_id": qa['id'],
+                        for qa in qa_pairs["qas"]:
+                            yield qa["id"], {
+                                "id": qa["id"],
+                                "question_id": qa["id"],
                                 "document_id": "NULL",
-                                "question": qa['question'],
-                                "type": 'factoid',
+                                "question": qa["question"],
+                                "type": "factoid",
                                 "choices": [],
                                 "context": qa_pairs["context"],
                                 "answer": qa["answers"],
-                                }
+                            }
 
 
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/clinicalQA',
-                                    name='clinicalqa_bigbio_qa')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/clinicalQA", name="clinicalqa_bigbio_qa"
+    )
     print(dataset)

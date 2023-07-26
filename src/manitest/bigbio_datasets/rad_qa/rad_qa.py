@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,7 +85,6 @@ class RadqaDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "radqa_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -103,16 +101,11 @@ class RadqaDataset(datasets.GeneratorBasedBuilder):
 
         # need to modify:
         if self.config.schema == "source":
-            features = datasets.Features(
-                {
-                    
-                }
-            )
+            features = datasets.Features({})
         # simplified schema for QA tasks
 
         elif self.config.schema == "bigbio_qa":
             features = qa_features
-
 
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
@@ -124,9 +117,7 @@ class RadqaDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -172,37 +163,37 @@ class RadqaDataset(datasets.GeneratorBasedBuilder):
 
             elif self.config.schema == "bigbio_qa":
                 file_data = json.loads(f.read())
-                file_data = file_data['data']
+                file_data = file_data["data"]
                 for line in file_data:
                     json_line = line["paragraphs"]
                     for qa_pairs in json_line:
-                        for qa in qa_pairs['qas']:
+                        for qa in qa_pairs["qas"]:
                             try:
-                                yield qa['id'], {
-                                "id": qa['id'],
-                                "question_id": qa['id'],
-                                "document_id": qa_pairs['document_id'],
-                                "question": qa['question'],
-                                "type": 'factoid',
-                                "choices": [],
-                                "context": qa_pairs["context"],
-                                "answer": [qa["answers"][0]['text']],
+                                yield qa["id"], {
+                                    "id": qa["id"],
+                                    "question_id": qa["id"],
+                                    "document_id": qa_pairs["document_id"],
+                                    "question": qa["question"],
+                                    "type": "factoid",
+                                    "choices": [],
+                                    "context": qa_pairs["context"],
+                                    "answer": [qa["answers"][0]["text"]],
                                 }
                             except:
-                                yield qa['id'], {
-                                "id": qa['id'],
-                                "question_id": qa['id'],
-                                "document_id": qa_pairs['document_id'],
-                                "question": qa['question'],
-                                "type": 'factoid',
-                                "choices": [],
-                                "context": qa_pairs["context"],
-                                "answer": [''],
+                                yield qa["id"], {
+                                    "id": qa["id"],
+                                    "question_id": qa["id"],
+                                    "document_id": qa_pairs["document_id"],
+                                    "question": qa["question"],
+                                    "type": "factoid",
+                                    "choices": [],
+                                    "context": qa_pairs["context"],
+                                    "answer": [""],
                                 }
 
 
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/radqa',
-                                    name='radqa_bigbio_qa')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/radqa", name="radqa_bigbio_qa"
+    )
     print(dataset)

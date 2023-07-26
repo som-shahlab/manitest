@@ -20,14 +20,16 @@ class Prompt1(PromptForGeneration):
 
     def generate_query(self, example: dict) -> str:
         """Takes a dataset example and returns a version of that example formulated as a query
-            without its corresponding answer, e.g.
-                "Suppose X. Can we infer Y?"
+        without its corresponding answer, e.g.
+            "Suppose X. Can we infer Y?"
         """
         return f"Paragraph: {example['text_1']} \n\nSummary: "
+
 
 ####################################
 # Task definition
 ####################################
+
 
 class MedParaSimp(Task):
     name: str = "medparasimp"
@@ -44,6 +46,3 @@ class MedParaSimp(Task):
 
 # Important -- needed so that the task can be imported by the eval harness!
 Export = MedParaSimp
-
-
-

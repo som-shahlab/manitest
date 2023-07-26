@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +83,6 @@ class liveqaDataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "liveqa_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             features = datasets.Features(
                 {
@@ -99,12 +97,10 @@ class liveqaDataset(datasets.GeneratorBasedBuilder):
                 }
             )
 
-        
         # simplified schema for QA tasks
 
         elif self.config.schema == "bigbio_qa":
             features = qa_features
-
 
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
@@ -116,9 +112,7 @@ class liveqaDataset(datasets.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
             extract_dir = dl_manager.extract(
                 os.path.join(
@@ -132,15 +126,15 @@ class liveqaDataset(datasets.GeneratorBasedBuilder):
             )
 
         return [
-            
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "filepath": os.path.join(data_dir, "TestDataset/TREC-2017-LiveQA-Medical-Test-Questions-w-summaries.xml"),
+                    "filepath": os.path.join(
+                        data_dir, "TestDataset/TREC-2017-LiveQA-Medical-Test-Questions-w-summaries.xml"
+                    ),
                     "split": "test",
                 },
             ),
-            
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
@@ -148,11 +142,9 @@ class liveqaDataset(datasets.GeneratorBasedBuilder):
                     "split": "train",
                 },
             ),
-            
         ]
 
     def _generate_examples(self, filepath, split: str) -> Tuple[int, Dict]:
-        
         if self.config.schema == "source":
             with open(filepath, "r") as f:
                 for line in f:
@@ -160,137 +152,136 @@ class liveqaDataset(datasets.GeneratorBasedBuilder):
                     yield json_line["title"], json_line
 
         elif self.config.schema == "bigbio_qa":
-            if split == 'train':
+            if split == "train":
                 for i, filename in enumerate(os.listdir(filepath)):
-
                     # 1.xml
                     if filename.endswith("1.xml"):
-                        xml_path  = os.path.join(filepath, filename)
-                        with open(xml_path, 'r') as myfile:
+                        xml_path = os.path.join(filepath, filename)
+                        with open(xml_path, "r") as myfile:
                             obj = xmltodict.parse(myfile.read())
-                            for qa in obj['NLM-QUESTIONS']['NLM-QUESTION']:
-                                try: 
-                                    #train1
-                                    qs_id = qa['@questionid']
+                            for qa in obj["NLM-QUESTIONS"]["NLM-QUESTION"]:
+                                try:
+                                    # train1
+                                    qs_id = qa["@questionid"]
                                 except:
-                                    #train2
-                                    qs_id = qa['@qid']
-                                subqs = qa['SUB-QUESTIONS']['SUB-QUESTION']
-                                #multiple subqs
+                                    # train2
+                                    qs_id = qa["@qid"]
+                                subqs = qa["SUB-QUESTIONS"]["SUB-QUESTION"]
+                                # multiple subqs
                                 if type(subqs) == list:
                                     for i, subq in enumerate(subqs):
-                                        qs_id = subq['@subqid']
-                                        ans = subq['ANSWERS']
+                                        qs_id = subq["@subqid"]
+                                        ans = subq["ANSWERS"]
                                         # multiple subqs + multiple ans
-                                        if type(subq['ANSWERS']['ANSWER']) == list:
-                                            anss = subq['ANSWERS']['ANSWER']
+                                        if type(subq["ANSWERS"]["ANSWER"]) == list:
+                                            anss = subq["ANSWERS"]["ANSWER"]
                                             for ans in anss:
-                                                yield ans['@answerid'], {
-                                                "id": ans['@answerid'],
-                                                "question_id": ans['@answerid'],
-                                                "document_id": filename,
-                                                "question": qa['MESSAGE'],
-                                                "type": 'NULL',
-                                                "choices": [],
-                                                "context": [],
-                                                "answer": [ans['#text']]
-                                                #"answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
+                                                yield ans["@answerid"], {
+                                                    "id": ans["@answerid"],
+                                                    "question_id": ans["@answerid"],
+                                                    "document_id": filename,
+                                                    "question": qa["MESSAGE"],
+                                                    "type": "NULL",
+                                                    "choices": [],
+                                                    "context": [],
+                                                    "answer": [ans["#text"]]
+                                                    # "answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
                                                 }
                                         # multiple subqs + single ans
                                         else:
-                                            ans = subq['ANSWERS']['ANSWER']
-                                            yield ans['@answerid'], {
-                                            "id": ans['@answerid'],
-                                            "question_id": ans['@answerid'],
-                                            "document_id": filename,
-                                            "question": qa['MESSAGE'],
-                                            "type": 'NULL',
-                                            "choices": [],
-                                            "context": [],
-                                            "answer": [ans['#text']]
-                                            #"answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
+                                            ans = subq["ANSWERS"]["ANSWER"]
+                                            yield ans["@answerid"], {
+                                                "id": ans["@answerid"],
+                                                "question_id": ans["@answerid"],
+                                                "document_id": filename,
+                                                "question": qa["MESSAGE"],
+                                                "type": "NULL",
+                                                "choices": [],
+                                                "context": [],
+                                                "answer": [ans["#text"]]
+                                                # "answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
                                             }
-                                #single subq
+                                # single subq
                                 else:
                                     # single subq + multiple ans
-                                    if type(subqs['ANSWERS']['ANSWER']) == list:
-                                        anss = subqs['ANSWERS']['ANSWER']
+                                    if type(subqs["ANSWERS"]["ANSWER"]) == list:
+                                        anss = subqs["ANSWERS"]["ANSWER"]
                                         for ans in anss:
-                                            yield ans['@answerid'], {
-                                            "id": ans['@answerid'],
-                                            "question_id": ans['@answerid'],
-                                            "document_id": filename,
-                                            "question": qa['MESSAGE'],
-                                            "type": 'NULL',
-                                            "choices": [],
-                                            "context": [],
-                                            "answer": [ans['#text']]
-                                            #"answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
+                                            yield ans["@answerid"], {
+                                                "id": ans["@answerid"],
+                                                "question_id": ans["@answerid"],
+                                                "document_id": filename,
+                                                "question": qa["MESSAGE"],
+                                                "type": "NULL",
+                                                "choices": [],
+                                                "context": [],
+                                                "answer": [ans["#text"]]
+                                                # "answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
                                             }
-                                    #single subq + single ans
+                                    # single subq + single ans
                                     else:
-                                        ans = subqs['ANSWERS']['ANSWER']
-                                        yield ans['@answerid'], {
-                                            "id": ans['@answerid'],
-                                            "question_id": ans['@answerid'],
+                                        ans = subqs["ANSWERS"]["ANSWER"]
+                                        yield ans["@answerid"], {
+                                            "id": ans["@answerid"],
+                                            "question_id": ans["@answerid"],
                                             "document_id": filename,
-                                            "question": qa['MESSAGE'],
-                                            "type": 'NULL',
+                                            "question": qa["MESSAGE"],
+                                            "type": "NULL",
                                             "choices": [],
                                             "context": [],
-                                            "answer": [ans['#text']]
-                                            #"answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
-                                            }
+                                            "answer": [ans["#text"]]
+                                            # "answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
+                                        }
                     # 2.xml
-                    else:            
-                        xml_path  = os.path.join(filepath, filename) 
-                        with open(xml_path, 'r') as myfile:
+                    else:
+                        xml_path = os.path.join(filepath, filename)
+                        with open(xml_path, "r") as myfile:
                             obj = xmltodict.parse(myfile.read())
-                            for qa in obj['NLM-QUESTIONS']['NLM-QUESTION']:
-                                try: 
-                                    #train1
-                                    qs_id = qa['@questionid']
+                            for qa in obj["NLM-QUESTIONS"]["NLM-QUESTION"]:
+                                try:
+                                    # train1
+                                    qs_id = qa["@questionid"]
                                 except:
-                                    #train2
-                                    qs_id = qa['@qid']
-                                subqs = qa['SUB-QUESTIONS']['SUB-QUESTION']
+                                    # train2
+                                    qs_id = qa["@qid"]
+                                subqs = qa["SUB-QUESTIONS"]["SUB-QUESTION"]
                                 yield qs_id, {
-                                            "id": qs_id,
-                                            "question_id": qs_id,
-                                            "document_id": filename,
-                                            "question": qa['MESSAGE'],
-                                            "type": 'NULL',
-                                            "choices": [],
-                                            "context": [],
-                                            "answer": [subqs['ANSWERS']['ANSWER']]
-                                            #"answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
-                                            }
+                                    "id": qs_id,
+                                    "question_id": qs_id,
+                                    "document_id": filename,
+                                    "question": qa["MESSAGE"],
+                                    "type": "NULL",
+                                    "choices": [],
+                                    "context": [],
+                                    "answer": [subqs["ANSWERS"]["ANSWER"]]
+                                    # "answer": [qa['SUB-QUESTIONS']['SUB-QUESTION']['ANSWERS']['ANSWER'][0]['#text']],
+                                }
 
-                                
-            elif split == 'test':
+            elif split == "test":
                 xml_path = filepath
-                with open(xml_path, 'r') as myfile:
+                with open(xml_path, "r") as myfile:
                     obj = xmltodict.parse(myfile.read())
-                    #print(qa['NLM-Summary'])
-                    #print(qa['ReferenceAnswers']['RefAnswer'][0]['ANSWER'])
-                    for qa in obj['LiveQA2017-Medical-Test-Set-Full']['NLM-QUESTION']:
-                        #print(qa['NLM-Summary'])
-                        #print(qa['ReferenceAnswers']['RefAnswer'][0]['ANSWER'])
-                        #print('='*50, qa['ANNOTATIONS'], '='*50)
-                        yield qa['@qid'], {
-                        "id": qa['@qid'],
-                        "question_id": qa['@qid'],
-                        "document_id": xml_path,
-                        "question": qa['NLM-Summary'],
-                        "type": qa['ANNOTATIONS']['TYPE'],
-                        "choices": [],
-                        "context": [],
-                        "answer": [qa['ReferenceAnswers']]
-                        #"answer": [qa['ReferenceAnswers']['RefAnswer'][0]['ANSWER']],
+                    # print(qa['NLM-Summary'])
+                    # print(qa['ReferenceAnswers']['RefAnswer'][0]['ANSWER'])
+                    for qa in obj["LiveQA2017-Medical-Test-Set-Full"]["NLM-QUESTION"]:
+                        # print(qa['NLM-Summary'])
+                        # print(qa['ReferenceAnswers']['RefAnswer'][0]['ANSWER'])
+                        # print('='*50, qa['ANNOTATIONS'], '='*50)
+                        yield qa["@qid"], {
+                            "id": qa["@qid"],
+                            "question_id": qa["@qid"],
+                            "document_id": xml_path,
+                            "question": qa["NLM-Summary"],
+                            "type": qa["ANNOTATIONS"]["TYPE"],
+                            "choices": [],
+                            "context": [],
+                            "answer": [qa["ReferenceAnswers"]]
+                            # "answer": [qa['ReferenceAnswers']['RefAnswer'][0]['ANSWER']],
                         }
 
+
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/live_.qa',
-                                    name='liveqa_bigbio_qa')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/live_.qa", name="liveqa_bigbio_qa"
+    )
     print(dataset)

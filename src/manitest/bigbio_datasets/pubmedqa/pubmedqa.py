@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +13,16 @@
 # limitations under the License.
 
 """
-We introduce PubMedQA, a novel biomedical question answering (QA) dataset collected from PubMed abstracts. 
-The task of PubMedQA is to answer research questions with yes/no/maybe (e.g.: Do preoperative statins reduce atrial 
+We introduce PubMedQA, a novel biomedical question answering (QA) dataset collected from PubMed abstracts.
+The task of PubMedQA is to answer research questions with yes/no/maybe (e.g.: Do preoperative statins reduce atrial
 fibrillation after coronary artery bypass grafting?) using the corresponding abstracts. PubMedQA has 1k expert-annotated,
- 61.2k unlabeled and 211.3k artificially generated QA instances. Each PubMedQA instance is composed of (1) a question 
- which is either an existing research article title or derived from one, (2) a context which is the corresponding 
- abstract without its conclusion, (3) a long answer, which is the conclusion of the abstract and, presumably, 
- answers the research question, and (4) a yes/no/maybe answer which summarizes the conclusion. PubMedQA is the 
- first QA dataset where reasoning over biomedical research texts, especially their quantitative contents, is 
- required to answer the questions. Our best performing model, multi-phase fine-tuning of BioBERT with long 
- answer bag-of-word statistics as additional supervision, achieves 68.1% accuracy, compared to single human 
+ 61.2k unlabeled and 211.3k artificially generated QA instances. Each PubMedQA instance is composed of (1) a question
+ which is either an existing research article title or derived from one, (2) a context which is the corresponding
+ abstract without its conclusion, (3) a long answer, which is the conclusion of the abstract and, presumably,
+ answers the research question, and (4) a yes/no/maybe answer which summarizes the conclusion. PubMedQA is the
+ first QA dataset where reasoning over biomedical research texts, especially their quantitative contents, is
+ required to answer the questions. Our best performing model, multi-phase fine-tuning of BioBERT with long
+ answer bag-of-word statistics as additional supervision, achieves 68.1% accuracy, compared to single human
  performance of 78.0% accuracy and majority-baseline of 55.2% accuracy, leaving much room for improvement.
   PubMedQA is publicly available at https://pubmedqa.github.io.
 
@@ -42,7 +41,7 @@ from .bigbiohub import entailment_features
 from .bigbiohub import BigBioConfig
 from .bigbiohub import Tasks
 
-_LANGUAGES = ['English']
+_LANGUAGES = ["English"]
 _PUBMED = False
 _LOCAL = True
 _CITATION = """\
@@ -69,16 +68,16 @@ _DATASETNAME = "pubmedqa"
 _DISPLAYNAME = "PUBMEDQA"
 
 _DESCRIPTION = """\
-We introduce PubMedQA, a novel biomedical question answering (QA) dataset collected from PubMed abstracts. 
-The task of PubMedQA is to answer research questions with yes/no/maybe (e.g.: Do preoperative statins reduce atrial 
+We introduce PubMedQA, a novel biomedical question answering (QA) dataset collected from PubMed abstracts.
+The task of PubMedQA is to answer research questions with yes/no/maybe (e.g.: Do preoperative statins reduce atrial
 fibrillation after coronary artery bypass grafting?) using the corresponding abstracts. PubMedQA has 1k expert-annotated,
- 61.2k unlabeled and 211.3k artificially generated QA instances. Each PubMedQA instance is composed of (1) a question 
- which is either an existing research article title or derived from one, (2) a context which is the corresponding 
- abstract without its conclusion, (3) a long answer, which is the conclusion of the abstract and, presumably, 
- answers the research question, and (4) a yes/no/maybe answer which summarizes the conclusion. PubMedQA is the 
- first QA dataset where reasoning over biomedical research texts, especially their quantitative contents, is 
- required to answer the questions. Our best performing model, multi-phase fine-tuning of BioBERT with long 
- answer bag-of-word statistics as additional supervision, achieves 68.1% accuracy, compared to single human 
+ 61.2k unlabeled and 211.3k artificially generated QA instances. Each PubMedQA instance is composed of (1) a question
+ which is either an existing research article title or derived from one, (2) a context which is the corresponding
+ abstract without its conclusion, (3) a long answer, which is the conclusion of the abstract and, presumably,
+ answers the research question, and (4) a yes/no/maybe answer which summarizes the conclusion. PubMedQA is the
+ first QA dataset where reasoning over biomedical research texts, especially their quantitative contents, is
+ required to answer the questions. Our best performing model, multi-phase fine-tuning of BioBERT with long
+ answer bag-of-word statistics as additional supervision, achieves 68.1% accuracy, compared to single human
  performance of 78.0% accuracy and majority-baseline of 55.2% accuracy, leaving much room for improvement.
   PubMedQA is publicly available at https://pubmedqa.github.io.
 """
@@ -86,7 +85,7 @@ fibrillation after coronary artery bypass grafting?) using the corresponding abs
 
 _HOMEPAGE = "https://aclanthology.org/D19-1259/"
 
-_LICENSE = 'PhysioNet Credentialed Health Data License'
+_LICENSE = "PhysioNet Credentialed Health Data License"
 
 _URLS = {}
 
@@ -99,11 +98,12 @@ _BIGBIO_VERSION = "1.0.0"
 def dump_jsonl(data, fpath):
     with open(fpath, "w") as outf:
         for d in data:
-            print (json.dumps(d), file=outf)
+            print(json.dumps(d), file=outf)
+
 
 def process_pubmedqa(file_path, fname):
     dname = "pubmedqa"
-    print (dname, fname)
+    print(dname, fname)
     if fname in ["train", "dev"]:
         data = json.load(open(f"{file_path}/pqal_fold0/{fname}_set.json"))
     elif fname == "test":
@@ -119,11 +119,21 @@ def process_pubmedqa(file_path, fname):
         assert label in ["yes", "no", "maybe"]
         outs.append({"id": id, "sentence1": question, "sentence2": context, "label": label})
         lens.append(len(question) + len(context))
-    print ("total", len(outs), "seqlen mean", int(np.mean(lens)), "median", int(np.median(lens)), "95th", int(np.percentile(lens, 95)), "max", np.max(lens))
+    print(
+        "total",
+        len(outs),
+        "seqlen mean",
+        int(np.mean(lens)),
+        "median",
+        int(np.median(lens)),
+        "95th",
+        int(np.percentile(lens, 95)),
+        "max",
+        np.max(lens),
+    )
 
     os.system(f"mkdir -p {file_path}/{dname}_hf")
     dump_jsonl(outs, f"{file_path}/{dname}_hf/{fname}.json")
-
 
 
 class PubMedQADataset(datasets.GeneratorBasedBuilder):
@@ -154,7 +164,6 @@ class PubMedQADataset(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "pubmedqa_source"
 
     def _info(self) -> datasets.DatasetInfo:
-
         if self.config.schema == "source":
             pass
         elif self.config.schema == "bigbio_pairs":
@@ -172,18 +181,15 @@ class PubMedQADataset(datasets.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=features,
             homepage=_HOMEPAGE,
-            #license=str(_LICENSE),
+            # license=str(_LICENSE),
             citation=_CITATION,
         )
 
-
     def _split_generators(self, dl_manager) -> List[datasets.SplitGenerator]:
         if self.config.data_dir is None:
-            raise ValueError(
-                "This is a local dataset. Please pass the data_dir kwarg to load_dataset."
-            )
+            raise ValueError("This is a local dataset. Please pass the data_dir kwarg to load_dataset.")
         else:
-            #TODO later on would want to go from raw file, but for now, importing processed files
+            # TODO later on would want to go from raw file, but for now, importing processed files
             data_dir = os.path.join(
                 self.config.data_dir,
             )
@@ -231,7 +237,7 @@ class PubMedQADataset(datasets.GeneratorBasedBuilder):
 
 
 if __name__ == "__main__":
-    dataset = datasets.load_dataset(__file__, 
-                                    data_dir='/local-scratch/nigam/projects/clinical_llm/data/pubmedqa_hf',
-                                    name='pubmedqa_bigbio_pairs')
+    dataset = datasets.load_dataset(
+        __file__, data_dir="/local-scratch/nigam/projects/clinical_llm/data/pubmedqa_hf", name="pubmedqa_bigbio_pairs"
+    )
     print(dataset)

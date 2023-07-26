@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2022 The HuggingFace Datasets Authors and the current dataset script contributor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +25,7 @@ from .bigbiohub import pairs_features
 from .bigbiohub import BigBioConfig
 from .bigbiohub import Tasks
 
-_LANGUAGES = ['English']
+_LANGUAGES = ["English"]
 _PUBMED = False
 _LOCAL = False
 _CITATION = """\
@@ -50,10 +49,8 @@ The objective of the RQE task is to identify entailment between two questions in
 """
 
 _HOMEPAGE = "https://sites.google.com/view/mediqa2019"
-_LICENSE = 'License information unavailable'
-_URLS = {
-    _DATASETNAME: "https://github.com/abachaa/MEDIQA2019/archive/refs/heads/master.zip"
-}
+_LICENSE = "License information unavailable"
+_URLS = {_DATASETNAME: "https://github.com/abachaa/MEDIQA2019/archive/refs/heads/master.zip"}
 
 _SUPPORTED_TASKS = [Tasks.TEXT_PAIRS_CLASSIFICATION]
 _SOURCE_VERSION = "1.0.0"
@@ -129,8 +126,7 @@ class MediqaRQEDataset(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "filepath": data_dir
-                    / "MEDIQA2019-master/MEDIQA_Task2_RQE/MEDIQA2019-Task2-RQE-TestSet-wLabels.xml"
+                    "filepath": data_dir / "MEDIQA2019-master/MEDIQA_Task2_RQE/MEDIQA2019-Task2-RQE-TestSet-wLabels.xml"
                 },
             ),
         ]
