@@ -269,7 +269,7 @@ def run_generation(
             ]
             true_labels: List[str] = [prompt.get_label(example) for example in batch]
             generations: List[str] = [
-                x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
+                x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens, max_tokens=max_tokens)
             ]
             example_ids: List[int] = [batch_idx * batch_size + i for i in range(len(batch))]
             rows.extend(list(zip(example_ids, prompts, generations, true_labels)))
