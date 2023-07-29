@@ -62,7 +62,7 @@ def main(args):
         in_context_shot_dataset: Dataset = dataset["validation"]
     else:
         warnings.warn("No train or validation set available. Therefore, few-shot incontext prompt will not be possible")
-        in_context_shot_dataset = None  
+        in_context_shot_dataset = None
 
     # Get dataset splits that we evaluate model on
     try:
