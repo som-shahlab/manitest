@@ -237,6 +237,7 @@ def run_generation(
     output_dir: str,
     batch_size: int = 10,
     max_new_tokens: int = 100,
+    max_tokens: int = 100, 
     n_shots: int = 0,
     in_context_shot_dataset: Optional[DatasetDict] = None,
     seed: int = 0,
