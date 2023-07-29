@@ -86,7 +86,7 @@ def main(args):
         seed=args.seed,
         n_shots=args.n_shots,
         in_context_shot_dataset=in_context_shot_dataset,
-        max_tokens=args.max_tokens
+        max_tokens=args.max_tokens,
     )
 
     logger.info("DONE!")
