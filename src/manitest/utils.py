@@ -39,9 +39,9 @@ def manifest_score_sequences(manifest: Manifest, prompts_with_labels: List[Tuple
 
 def manifest_generate_text(manifest: Manifest, sequences: List[str], **kwargs) -> List[Tuple[str, float]]:
     try:
-        results: Dict = requests.post(
-            manifest.client_pool.get_current_client().host + "/completions", json={"prompt": sequences, **kwargs}
-        ).json()
+        json_payload = {"prompt": sequences, **kwargs}
+        print(json_payload)
+        results: Dict = requests.post(manifest.client_pool.get_current_client().host + "/completions", json=json_payload).json()
         generations = [(x["text"], x["logprob"]) for x in results["choices"]]
     except Exception as e:
         print(str(e))
