@@ -86,6 +86,7 @@ def main(args):
         seed=args.seed,
         n_shots=args.n_shots,
         in_context_shot_dataset=in_context_shot_dataset,
+        max_tokens=args.max_tokens
     )
 
     logger.info("DONE!")
@@ -161,6 +162,12 @@ if __name__ == "__main__":
         "--max_new_tokens",
         type=int,
         help="Max new generation token length",
+        default=512,
+    )
+    parser.add_argument(
+        "--max_tokens",
+        type=int,
+        help="Max token length",
         default=512,
     )
 
