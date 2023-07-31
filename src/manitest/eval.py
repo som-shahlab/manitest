@@ -36,6 +36,7 @@ def run_eval(
     seed: int = 0,
     n_shots: int = 0,
     in_context_shot_dataset: Optional[DatasetDict] = None,
+    metric_list: List[str]: [],
     *args,
     **kwargs,
 ) -> Dict[str, Dict[str, Union[pd.DataFrame, Dict]]]:
@@ -91,7 +92,7 @@ def run_eval(
 
         # Calculate metrics
         # [key] = split, [value] = Dict of metrics
-        metrics: Dict[str, Dict] = metric_func(results)
+        metrics: Dict[str, Dict] = metric_func(results, metric_list)
         prompt_to_metrics[prompt.name] = metrics
 
         # Save results / metrics
@@ -325,7 +326,7 @@ def run_multilabel_classification(
 ####################################
 
 
-def metric_classification(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
+def metric_classification(results: Dict[str, pd.DataFrame], metric_list: List[str] = []) -> Dict[str, Dict]:
     """Compute classification metrics for a specific prompt for all splits in `results`"""
     metrics: Dict[str, Dict] = {}
     for split, df in results.items():
@@ -334,17 +335,18 @@ def metric_classification(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
     return metrics
 
 
-def metric_generation(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
+def metric_generation(results: Dict[str, pd.DataFrame], metric_list: List[str] = ["rouge", "bleu"]) -> Dict[str, Dict]:
     """Compute generation metrics for a specific prompt for all splits in `results`"""
     metrics: Dict[str, Dict] = {}
     for split, df in results.items():
-        generations: List[str] = df["generation"].tolist()
-        true_labels: List[str] = df["true_label"].tolist()
-        metrics[split] = {
-            "bleu": generation_metric(generations, true_labels, "sentence_bleu"),
-            "rouge": generation_metric(generations, true_labels, "rouge"),
-            "meteor": generation_metric(generations, true_labels, "meteor"),
-        }
+        predictions: List[str] = df["generation"].tolist()
+        references: List[str] = df["true_label"].tolist()
+        metrics = generation_metric(predictions, references, metric_list)
+        # metrics[split] = {
+        #     "bleu": generation_metric(generations, true_labels, "sentence_bleu"),
+        #     "rouge": generation_metric(generations, true_labels, "rouge"),
+        #     "meteor": generation_metric(generations, true_labels, "meteor"),
+        # }
     return metrics
 
 

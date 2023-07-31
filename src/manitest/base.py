@@ -186,7 +186,7 @@ def load_python_module_from_python_file(path_to_python_file: str):
     return module
 
 
-def load_task(path_to_task: str, dataloader: Optional[str], data_dir: Optional[str]) -> Tuple[DatasetDict, Task]:
+def load_task(path_to_task: str, dataloader: Optional[str], data_dir: Optional[str], name: Optional[str]) -> Tuple[DatasetDict, Task]:
     # Load config.py file
     module = load_python_module_from_python_file(path_to_task)
     task: Task = module.Export()
@@ -201,7 +201,7 @@ def load_task(path_to_task: str, dataloader: Optional[str], data_dir: Optional[s
         )
 
     # Load dataset
-    dataset = task.load_dataset(dataloader=dataloader, data_dir=data_dir)
+    dataset = task.load_dataset(dataloader=dataloader, data_dir=data_dir, name=name)
     logger.info(
         f"Loaded dataset{' ' + str(dataloader) if dataloader else ''}"
         f" from '{data_dir if data_dir else 'HuggingFace Hub'}'"

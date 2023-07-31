@@ -32,7 +32,7 @@ from manitest.base import load_task
 
 def main(args):
     # Load dataset + prompts for specific task
-    dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir)
+    dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir, args.bigbio_name)
     logger.info(f"Finished loading '{task.name}' dataset and task")
 
     # Setup directory where we will save our outputs / logs
@@ -87,6 +87,7 @@ def main(args):
         n_shots=args.n_shots,
         in_context_shot_dataset=in_context_shot_dataset,
         max_tokens=args.max_tokens,
+        metric_list=args.metric_list
     )
 
     logger.info("DONE!")
@@ -134,6 +135,14 @@ if __name__ == "__main__":
         help=(
             "Path to DIRECTORY containing your dataset (if applicable)."
             "Passed to huggingface's load_dataset() as `data_dir` kwarg."
+        ),
+        required=False,
+    )
+    parser.add_argument(
+        "--bigbio_name",
+        type=str,
+        help=(
+            "Name of the bigbio schema"
         ),
         required=False,
     )
@@ -215,6 +224,12 @@ if __name__ == "__main__":
         type=int,
         help="Random seed (for sampling shots)",
         default=0,
+    )
+    parser.add_argument(
+        "--metric_list",
+        nargs="+",
+        default=["rouge", "bleu"],
+        help='List of evaluation metrics to calculate: Available: "bleurt", "bertscore", "chrf", "google_bleu", "rouge", "meteor"',
     )
 
     args = parser.parse_args()
