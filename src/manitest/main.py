@@ -34,7 +34,6 @@ def main(args):
     # Load dataset + prompts for specific task
     dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir)
 
-    jdskfjskfjkll =
     if args.num_test_sample and len(dataset["test"]) > args.num_test_sample:
         print("Number of test sample", args.num_test_sample)
         test_data = [line for line in dataset["test"]]
