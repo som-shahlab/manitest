@@ -35,9 +35,11 @@ def main(args):
     dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir)
     
     if args.num_test_sample and len(dataset["test"]) > args.num_test_sample:
+        print("Number of test sample", args.num_test_sample)
         test_data = [line for line in dataset["test"]]
         test_data_sample = Dataset.from_list(test_data[:args.num_test_sample])
         dataset["test"] = test_data_sample
+        print("Length of test after sampling", len(dataset["test"]))
 
     logger.info(f"Finished loading '{task.name}' dataset and task")
 
@@ -176,7 +178,6 @@ if __name__ == "__main__":
         help="Max token length",
         default=512,
     )
-
     # Decoder args (optional)
     parser.add_argument(
         "--do_sample",
