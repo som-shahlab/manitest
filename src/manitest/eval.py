@@ -151,7 +151,7 @@ def run_classification(
 
     # Adjust batch size to account for multiple terms per class for each prompt
     n_terms: int = len([x for x in prompt.verbalizer.values()])
-    actual_batch_size: int = batch_size // n_terms
+    actual_batch_size: int = min(batch_size // n_terms, 1)
 
     logger.info(
         f"Requested batch size: {batch_size} examples |"
