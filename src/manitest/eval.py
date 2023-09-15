@@ -10,6 +10,7 @@ import pandas as pd
 from sklearn.metrics import classification_report, confusion_matrix
 from datasets import DatasetDict
 from loguru import logger
+
 from manitest.metrics import generation_metric
 from manitest.base import Task, TaskType, Prompt
 from manitest.utils import (
@@ -95,9 +96,19 @@ def run_eval(
 
         # Save results / metrics
         for split in dataset.keys():
-            results[split].to_csv(os.path.join(output_dir, f"results_{split}_{prompt.name}.csv"), index=False)
+            results[split].to_csv(
+                os.path.join(output_dir, f"results_{split}_task_{task.name}_prompt_{prompt.name}_shots_{n_shots}.csv"),
+                index=False,
+            )
             json.dump(
-                metrics[split], open(os.path.join(output_dir, f"metrics_{split}_{prompt.name}.json"), "w"), indent=4
+                metrics[split],
+                open(
+                    os.path.join(
+                        output_dir, f"metrics_{split}_task_{task.name}_prompt_{prompt.name}_shots_{n_shots}.json"
+                    ),
+                    "w",
+                ),
+                indent=4,
             )
         logger.info(f"Prompt '{prompt.name}' metrics:\n{metrics}")
 
@@ -106,7 +117,11 @@ def run_eval(
 
     # Save metrics
     for split in dataset.keys():
-        json.dump(metrics_agg[split], open(os.path.join(output_dir, f"metrics_{split}.json"), "w"), indent=4)
+        json.dump(
+            metrics_agg[split],
+            open(os.path.join(output_dir, f"metrics_agg_{split}_task_{task.name}_shots_{n_shots}.json"), "w"),
+            indent=4,
+        )
     logger.info(f"Aggregated metrics across ALL prompts:\n{metrics}")
 
 
@@ -136,7 +151,7 @@ def run_classification(
 
     # Adjust batch size to account for multiple terms per class for each prompt
     n_terms: int = len([x for x in prompt.verbalizer.values()])
-    actual_batch_size: int = batch_size // n_terms
+    actual_batch_size: int = min(batch_size // n_terms, 1)
 
     logger.info(
         f"Requested batch size: {batch_size} examples |"
@@ -210,7 +225,7 @@ def run_classification(
         results[split] = df_pred[["example_id", "true_label", "pred_label", "logprob", "prompt", "generation"]]
 
         # Log raw model outputs
-        df_raw.to_csv(os.path.join(output_dir, f"raw_{split}_{prompt.name}.csv"), index=False)
+        df_raw.to_csv(os.path.join(output_dir, f"raw_{split}_prompt_{prompt.name}_shots_{n_shots}.csv"), index=False)
 
     return results
 
@@ -222,6 +237,7 @@ def run_generation(
     output_dir: str,
     batch_size: int = 10,
     max_new_tokens: int = 100,
+    max_tokens: int = 100,
     n_shots: int = 0,
     in_context_shot_dataset: Optional[DatasetDict] = None,
     seed: int = 0,
@@ -251,9 +267,10 @@ def run_generation(
                 )
                 for example in batch
             ]
-            true_labels: List[str] = [prompt.generate_label(example) for example in batch]
+            true_labels: List[str] = [prompt.get_label(example) for example in batch]
             generations: List[str] = [
-                x[0] for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens)
+                x[0]
+                for x in manifest_generate_text(manifest, prompts, max_new_tokens=max_new_tokens, max_tokens=max_tokens)
             ]
             example_ids: List[int] = [batch_idx * batch_size + i for i in range(len(batch))]
             rows.extend(list(zip(example_ids, prompts, generations, true_labels)))
@@ -327,6 +344,7 @@ def metric_generation(results: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
         metrics[split] = {
             "bleu": generation_metric(generations, true_labels, "sentence_bleu"),
             "rouge": generation_metric(generations, true_labels, "rouge"),
+            "meteor": generation_metric(generations, true_labels, "meteor"),
         }
     return metrics
 

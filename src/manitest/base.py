@@ -64,7 +64,7 @@ class Prompt(ABC):
         example: dict,
         n_shots: int = 0,
         instruction_separator: str = "\n\n",
-        shot_separator: str = "\n",
+        shot_separator: str = "\n\n",
         post_shot_separator: str = "\n",
         **kwargs,
     ) -> str:

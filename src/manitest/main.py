@@ -22,6 +22,9 @@ from loguru import logger
 from manifest import Manifest
 from datasets import DatasetDict, Dataset
 from urllib.parse import urlparse
+import warnings
+
+import sys
 
 from manitest.eval import run_eval
 from manitest.base import load_task
@@ -30,6 +33,14 @@ from manitest.base import load_task
 def main(args):
     # Load dataset + prompts for specific task
     dataset, task = load_task(args.path_to_task, args.dataloader, args.data_dir)
+
+    if args.num_test_sample and len(dataset["test"]) > args.num_test_sample:
+        print("Number of test sample", args.num_test_sample)
+        test_data = [line for line in dataset["test"]]
+        test_data_sample = Dataset.from_list(test_data[: args.num_test_sample])
+        dataset["test"] = test_data_sample
+        print("Length of test after sampling", len(dataset["test"]))
+
     logger.info(f"Finished loading '{task.name}' dataset and task")
 
     # Setup directory where we will save our outputs / logs
@@ -52,7 +63,14 @@ def main(args):
         raise ConnectionRefusedError(f"Error connecting to Manifest server. Is it running at {args.manifest_url} ?")
 
     # Get dataset for in-context shots
-    in_context_shot_dataset: Dataset = dataset["train"]
+
+    if "train" in dataset:
+        in_context_shot_dataset: Dataset = dataset["train"]
+    elif "validation" in dataset:
+        in_context_shot_dataset: Dataset = dataset["validation"]
+    else:
+        warnings.warn("No train or validation set available. Therefore, few-shot incontext prompt will not be possible")
+        in_context_shot_dataset = None
 
     # Get dataset splits that we evaluate model on
     try:
@@ -76,6 +94,7 @@ def main(args):
         seed=args.seed,
         n_shots=args.n_shots,
         in_context_shot_dataset=in_context_shot_dataset,
+        max_tokens=args.max_tokens,
     )
 
     logger.info("DONE!")
@@ -153,7 +172,12 @@ if __name__ == "__main__":
         help="Max new generation token length",
         default=512,
     )
-
+    parser.add_argument(
+        "--max_tokens",
+        type=int,
+        help="Max token length",
+        default=512,
+    )
     # Decoder args (optional)
     parser.add_argument(
         "--do_sample",
@@ -185,7 +209,12 @@ if __name__ == "__main__":
         help="For nucleus sampling",
         default=0.9,
     )
-
+    parser.add_argument(
+        "--num_test_sample",
+        type=int,
+        help="Number of test samples to run on for debugging",
+        default=None,
+    )
     # In-context few shot (optional)
     parser.add_argument(
         "--n_shots",
