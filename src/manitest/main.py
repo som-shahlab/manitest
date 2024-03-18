@@ -15,6 +15,7 @@ python3 main.py \
     --data_dir ~/Downloads/mednli-a-natural-language-inference-dataset-for-the-clinical-domain-1.0.0/ \
     --dataset_splits test,train
 """
+
 import os
 import argparse
 import requests
